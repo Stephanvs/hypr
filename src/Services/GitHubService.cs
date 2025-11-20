@@ -7,15 +7,9 @@ namespace Hyprwt.Services;
 /// GitHub API service for hyprwt.
 /// Handles GitHub operations like fetching PR status.
 /// </summary>
-public class GitHubService
+public class GitHubService(ILogger<GitHubService> logger)
 {
-    private readonly ILogger<GitHubService> _logger;
     private GitHubClient? _client;
-
-    public GitHubService(ILogger<GitHubService> logger)
-    {
-        _logger = logger;
-    }
 
     /// <summary>
     /// Initializes the GitHub client with authentication.
@@ -28,7 +22,7 @@ public class GitHubService
         var token = Environment.GetEnvironmentVariable("GITHUB_TOKEN");
         if (string.IsNullOrEmpty(token))
         {
-            _logger.LogWarning("GITHUB_TOKEN not set, GitHub features will be limited");
+            logger.LogWarning("GITHUB_TOKEN not set, GitHub features will be limited");
             _client = new GitHubClient(new ProductHeaderValue("hyprwt"));
             return;
         }
@@ -38,7 +32,7 @@ public class GitHubService
             Credentials = new Credentials(token)
         };
 
-        _logger.LogDebug("GitHub client initialized with authentication");
+        logger.LogDebug("GitHub client initialized with authentication");
     }
 
     /// <summary>
@@ -58,12 +52,12 @@ public class GitHubService
         }
         catch (NotFoundException)
         {
-            _logger.LogWarning("Pull request #{PrNumber} not found", prNumber);
+            logger.LogWarning("Pull request #{PrNumber} not found", prNumber);
             return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to check PR status");
+            logger.LogError(ex, "Failed to check PR status");
             return false;
         }
     }
@@ -96,7 +90,7 @@ public class GitHubService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get PR for branch {Branch}", branch);
+            logger.LogError(ex, "Failed to get PR for branch {Branch}", branch);
             return null;
         }
     }
@@ -117,12 +111,12 @@ public class GitHubService
         }
         catch (NotFoundException)
         {
-            _logger.LogWarning("Pull request #{PrNumber} not found", prNumber);
+            logger.LogWarning("Pull request #{PrNumber} not found", prNumber);
             return null;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get pull request");
+            logger.LogError(ex, "Failed to get pull request");
             return null;
         }
     }
@@ -147,7 +141,7 @@ public class GitHubService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to check for closed PR");
+            logger.LogError(ex, "Failed to check for closed PR");
             return false;
         }
     }

@@ -9,15 +9,8 @@ namespace Hyprwt.Services;
 /// Git operations service for hyprwt.
 /// Handles all git-related operations including worktrees, branches, and repository status.
 /// </summary>
-public class GitService
+public class GitService(ILogger<GitService> logger)
 {
-    private readonly ILogger<GitService> _logger;
-
-    public GitService(ILogger<GitService> logger)
-    {
-        _logger = logger;
-    }
-
     /// <summary>
     /// Finds the root directory of the git repository.
     /// </summary>
@@ -43,7 +36,7 @@ public class GitService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to find repository root");
+            logger.LogError(ex, "Failed to find repository root");
             return null;
         }
     }
@@ -132,7 +125,7 @@ public class GitService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to list worktrees");
+            logger.LogError(ex, "Failed to list worktrees");
         }
 
         return worktrees;
@@ -185,16 +178,16 @@ public class GitService
             var result = RunGitCommand(repoPath, args.ToArray());
             if (result.ExitCode == 0)
             {
-                _logger.LogInformation("Created worktree at {Path} for branch {Branch}", worktreePath, branch);
+                logger.LogInformation("Created worktree at {Path} for branch {Branch}", worktreePath, branch);
                 return true;
             }
 
-            _logger.LogError("Failed to create worktree: {Error}", result.Error);
+            logger.LogError("Failed to create worktree: {Error}", result.Error);
             return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception creating worktree");
+            logger.LogError(ex, "Exception creating worktree");
             return false;
         }
     }
@@ -218,16 +211,16 @@ public class GitService
             var result = RunGitCommand(repoPath, args.ToArray());
             if (result.ExitCode == 0)
             {
-                _logger.LogInformation("Removed worktree at {Path}", worktreePath);
+                logger.LogInformation("Removed worktree at {Path}", worktreePath);
                 return true;
             }
 
-            _logger.LogError("Failed to remove worktree: {Error}", result.Error);
+            logger.LogError("Failed to remove worktree: {Error}", result.Error);
             return false;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Exception removing worktree");
+            logger.LogError(ex, "Exception removing worktree");
             return false;
         }
     }
@@ -248,7 +241,7 @@ public class GitService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get current branch");
+            logger.LogError(ex, "Failed to get current branch");
             return null;
         }
     }
@@ -285,7 +278,7 @@ public class GitService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get default branch");
+            logger.LogError(ex, "Failed to get default branch");
             return "main";
         }
     }
@@ -336,7 +329,7 @@ public class GitService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to fetch branches");
+            logger.LogError(ex, "Failed to fetch branches");
             return false;
         }
     }
@@ -356,7 +349,7 @@ public class GitService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to check for uncommitted changes");
+            logger.LogError(ex, "Failed to check for uncommitted changes");
             return false;
         }
     }
@@ -425,7 +418,7 @@ public class GitService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to get branch status for {Branch}", worktree.Branch);
+            logger.LogError(ex, "Failed to get branch status for {Branch}", worktree.Branch);
             return new BranchStatus(
                 worktree.Branch,
                 HasRemote: false,
@@ -469,7 +462,7 @@ public class GitService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to run git command");
+            logger.LogError(ex, "Failed to run git command");
             return (-1, "", ex.Message);
         }
     }
