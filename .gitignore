@@ -1,0 +1,11 @@
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+.DS_Store
+*.swp
+*.user
+
+.vscode/
+.idea/
+.ruff_cache/

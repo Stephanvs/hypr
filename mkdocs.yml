@@ -1,0 +1,69 @@
+site_name: hyprwt documentation
+site_description: git worktree manager with automatic terminal switching and cleanup
+site_url: https://irskep.github.io/hyprwt/
+repo_url: https://github.com/irskep/hyprwt
+repo_name: irskep/hyprwt
+edit_uri: edit/main/docs/
+
+nav:
+    - Home: index.md
+    - Getting Started: gettingstarted.md
+    - Reference:
+          - CLI Reference: clireference.md
+          - Configuration: configuration.md
+          - Lifecycle Hooks: lifecyclehooks.md
+          - Terminal Support: terminalsupport.md
+          - Troubleshooting: troubleshooting.md
+    - Changelog: CHANGELOG.md
+
+plugins:
+    - search
+    - help-output:
+          command_prefix: "uv run"
+    - gh-admonitions
+
+extra:
+    social:
+        - icon: fontawesome/brands/github
+          link: https://github.com/irskep/hyprwt
+        - icon: fontawesome/brands/python
+          link: https://pypi.org/project/hyprwt/
+    version:
+        provider: mike
+
+extra_css:
+    - stylesheets/extra.css
+
+theme:
+    name: material
+    font:
+        text: IBM Plex Sans
+    icon:
+        logo: lucide/folder-tree
+        repo: fontawesome/brands/github
+    palette:
+        # Palette toggle for light mode
+        - scheme: default
+          primary: "deep orange"
+          accent: "deep orange"
+          toggle:
+              icon: material/brightness-7
+              name: Switch to dark mode
+        # Palette toggle for dark mode
+        - scheme: slate
+          primary: "deep purple"
+          accent: "deep purple"
+          toggle:
+              icon: material/brightness-4
+              name: Switch to light mode
+    features:
+        - navigation.sections
+        - navigation.expand
+        - navigation.path
+        - navigation.top
+        - navigation.footer
+        - search.highlight
+        - search.share
+        - content.code.copy
+        - content.code.annotate
+        - content.tooltips

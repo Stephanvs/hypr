@@ -1,0 +1,165 @@
+using Hyprwt.Configuration;
+using Hyprwt.Models;
+using Hyprwt.Services;
+using Microsoft.Extensions.Logging;
+using Spectre.Console;
+
+namespace Hyprwt.Commands;
+
+/// <summary>
+/// Cleans up worktrees based on various criteria.
+/// </summary>
+public class CleanupCommandHandler(
+    ILogger<CleanupCommandHandler> logger,
+    GitService gitService,
+    ConfigLoader configLoader)
+{
+    /// <summary>
+    /// Executes the cleanup command.
+    /// </summary>
+    public async Task<int> ExecuteAsync(Models.CleanupCommand command)
+    {
+        try
+        {
+            var repoPath = gitService.FindRepoRoot();
+            if (repoPath == null)
+            {
+                AnsiConsole.MarkupLine("[red]Error:[/] Not in a git repository");
+                return 1;
+            }
+
+            configLoader.LoadConfig(repoPath);
+            var worktrees = gitService.ListWorktrees(repoPath);
+
+            // Exclude primary worktree
+            var candidates = worktrees.Where(w => !w.IsPrimary).ToList();
+
+            if (candidates.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[yellow]No worktrees to clean up[/]");
+                return 0;
+            }
+
+            // Filter based on mode
+            var toRemove = await FilterWorktreesAsync(repoPath, candidates, command.Mode);
+
+            if (toRemove.Count == 0)
+            {
+                AnsiConsole.MarkupLine("[yellow]No worktrees match cleanup criteria[/]");
+                return 0;
+            }
+
+            // Display what will be removed
+            AnsiConsole.MarkupLine($"[yellow]Found {toRemove.Count} worktree(s) to remove:[/]");
+            foreach (var wt in toRemove)
+            {
+                AnsiConsole.MarkupLine($"  • [cyan]{wt.Branch}[/] ({wt.Path})");
+            }
+
+            if (command.DryRun)
+            {
+                AnsiConsole.MarkupLine("[dim]Dry run - no changes made[/]");
+                return 0;
+            }
+
+            // Confirm removal
+            if (!command.AutoConfirm)
+            {
+                if (!AnsiConsole.Confirm($"Remove {toRemove.Count} worktree(s)?"))
+                {
+                    AnsiConsole.MarkupLine("[yellow]Cancelled[/]");
+                    return 0;
+                }
+            }
+
+            // Remove worktrees
+            var removed = 0;
+            foreach (var wt in toRemove)
+            {
+                AnsiConsole.MarkupLine($"Removing [cyan]{wt.Branch}[/]...");
+                if (gitService.RemoveWorktree(repoPath, wt.Path, command.Force))
+                {
+                    AnsiConsole.MarkupLine($"  [green]✓[/] Removed {wt.Branch}");
+                    removed++;
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine($"  [red]✗[/] Failed to remove {wt.Branch}");
+                }
+            }
+
+            AnsiConsole.MarkupLine($"\n[green]Removed {removed} of {toRemove.Count} worktree(s)[/]");
+            return 0;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to cleanup worktrees");
+            AnsiConsole.MarkupLine($"[red]Error:[/] {ex.Message}");
+            return 1;
+        }
+    }
+
+    private async Task<List<WorktreeInfo>> FilterWorktreesAsync(
+        string repoPath,
+        List<WorktreeInfo> worktrees,
+        CleanupMode mode)
+    {
+        return mode switch
+        {
+            CleanupMode.All => worktrees,
+            CleanupMode.Remoteless => FilterRemoteless(repoPath, worktrees),
+            CleanupMode.Merged => FilterMerged(repoPath, worktrees),
+            CleanupMode.GitHub => await FilterGitHubAsync(repoPath, worktrees),
+            CleanupMode.Interactive => FilterInteractive(worktrees),
+            _ => new List<WorktreeInfo>()
+        };
+    }
+
+    private List<WorktreeInfo> FilterRemoteless(string repoPath, List<WorktreeInfo> worktrees)
+    {
+        var result = new List<WorktreeInfo>();
+
+        foreach (var wt in worktrees)
+        {
+            var status = gitService.GetBranchStatus(repoPath, wt);
+            if (!status.HasRemote)
+            {
+                result.Add(wt);
+            }
+        }
+
+        return result;
+    }
+
+    private List<WorktreeInfo> FilterMerged(string repoPath, List<WorktreeInfo> worktrees)
+    {
+        var result = new List<WorktreeInfo>();
+
+        foreach (var wt in worktrees)
+        {
+            var status = gitService.GetBranchStatus(repoPath, wt);
+            if (status.IsMerged || status.IsIdentical)
+            {
+                result.Add(wt);
+            }
+        }
+
+        return result;
+    }
+
+    private async Task<List<WorktreeInfo>> FilterGitHubAsync(string repoPath, List<WorktreeInfo> worktrees)
+    {
+        // TODO: Implement GitHub PR-based filtering
+        // Need to extract owner/repo from git remote
+        AnsiConsole.MarkupLine("[yellow]GitHub mode not yet fully implemented, falling back to merged[/]");
+        return FilterMerged(repoPath, worktrees);
+    }
+
+    private List<WorktreeInfo> FilterInteractive(List<WorktreeInfo> worktrees)
+    {
+        // TODO: Implement interactive TUI selection (Phase 4)
+        // For now, let user confirm all
+        AnsiConsole.MarkupLine("[yellow]Interactive mode not yet implemented, showing all candidates[/]");
+        return worktrees;
+    }
+}

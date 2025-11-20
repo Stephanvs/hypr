@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="src/hyprwt.csproj" />
+  <Project Path="tests\Testing\Testing.csproj" />
+</Solution>

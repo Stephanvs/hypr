@@ -1,0 +1,142 @@
+using Hyprwt.Configuration;
+using Hyprwt.Utils;
+using Microsoft.Extensions.Logging;
+using System.Text.Json;
+
+namespace Hyprwt.Services;
+
+/// <summary>
+/// Manages application state and persistence.
+/// Handles state directory, version check state, and cleanup tracking.
+/// </summary>
+public class StateService
+{
+    private readonly ILogger<StateService> _logger;
+    private readonly ConfigLoader _configLoader;
+    private readonly string _appDir;
+    private readonly string _stateFile;
+
+    public StateService(ILogger<StateService> logger, ConfigLoader configLoader)
+    {
+        _logger = logger;
+        _configLoader = configLoader;
+        _appDir = PathProvider.GetDefaultConfigDirectory();
+        _stateFile = Path.Combine(_appDir, "state.json");
+
+        EnsureAppDirectoryExists();
+    }
+
+    /// <summary>
+    /// Gets the application directory path.
+    /// </summary>
+    public string AppDir => _appDir;
+
+    /// <summary>
+    /// Ensures the application directory exists.
+    /// </summary>
+    private void EnsureAppDirectoryExists()
+    {
+        if (!Directory.Exists(_appDir))
+        {
+            Directory.CreateDirectory(_appDir);
+            _logger.LogDebug("Created app directory: {AppDir}", _appDir);
+        }
+    }
+
+    /// <summary>
+    /// Loads state from JSON file.
+    /// </summary>
+    public AppState LoadState()
+    {
+        if (!File.Exists(_stateFile))
+        {
+            _logger.LogDebug("No state file found, returning empty state");
+            return new AppState();
+        }
+
+        try
+        {
+            var json = File.ReadAllText(_stateFile);
+            var state = JsonSerializer.Deserialize<AppState>(json);
+            _logger.LogDebug("State loaded successfully");
+            return state ?? new AppState();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to load state file");
+            return new AppState();
+        }
+    }
+
+    /// <summary>
+    /// Saves state to JSON file.
+    /// </summary>
+    public void SaveState(AppState state)
+    {
+        try
+        {
+            var json = JsonSerializer.Serialize(state, new JsonSerializerOptions
+            {
+                WriteIndented = true
+            });
+            File.WriteAllText(_stateFile, json);
+            _logger.LogDebug("State saved successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to save state file");
+        }
+    }
+
+    /// <summary>
+    /// Gets the last version check timestamp.
+    /// </summary>
+    public DateTime? GetLastVersionCheck()
+    {
+        var state = LoadState();
+        return state.LastVersionCheck;
+    }
+
+    /// <summary>
+    /// Updates the last version check timestamp.
+    /// </summary>
+    public void UpdateLastVersionCheck()
+    {
+        var state = LoadState();
+        state.LastVersionCheck = DateTime.UtcNow;
+        SaveState(state);
+    }
+
+    /// <summary>
+    /// Checks if version check should be performed (once per day).
+    /// </summary>
+    public bool ShouldCheckVersion()
+    {
+        var lastCheck = GetLastVersionCheck();
+        if (lastCheck == null)
+            return true;
+
+        return (DateTime.UtcNow - lastCheck.Value).TotalHours >= 24;
+    }
+}
+
+/// <summary>
+/// Application state data.
+/// </summary>
+public class AppState
+{
+    /// <summary>
+    /// Last time version was checked.
+    /// </summary>
+    public DateTime? LastVersionCheck { get; set; }
+
+    /// <summary>
+    /// Worktrees that have been cleaned up (for tracking).
+    /// </summary>
+    public List<string> CleanedUpWorktrees { get; set; } = new();
+
+    /// <summary>
+    /// Additional metadata.
+    /// </summary>
+    public Dictionary<string, string> Metadata { get; set; } = new();
+}
