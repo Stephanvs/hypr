@@ -58,7 +58,6 @@ public class GitService(ILogger<GitService> logger)
                 return worktrees;
 
             var lines = result.Output.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            WorktreeInfo? current = null;
             string? currentPath = null;
             string? currentBranch = null;
             bool isPrimary = false;
