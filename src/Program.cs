@@ -145,6 +145,15 @@ public class Program
         return switchCommand;
     }
 
+    private enum CleanupMode
+    {
+      All,
+      Remoteless,
+      Merged,
+      Interactive,
+      GitHub
+    }
+
     private static Command BuildCleanupCommand(ServiceProvider serviceProvider, Option<bool> debugOption, Option<bool> yesOption)
     {
         var cleanupCommand = new Command("cleanup", "Clean up worktrees");
@@ -156,7 +165,7 @@ public class Program
         cleanupCommand.AddAlias("del");
         cleanupCommand.AddAlias("delete");
 
-        var modeOption = new Option<string?>("--mode", "Cleanup mode (all/remoteless/merged/interactive/github)");
+        var modeOption = new Option<CleanupMode>("--mode", "Cleanup mode (all/remoteless/merged/interactive/github)");
         var dryRunOption = new Option<bool>("--dry-run", "Show what would be removed");
         var forceOption = new Option<bool>("--force", "Force remove with uncommitted changes");
 
