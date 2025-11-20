@@ -148,6 +148,13 @@ public class Program
     private static Command BuildCleanupCommand(ServiceProvider serviceProvider, Option<bool> debugOption, Option<bool> yesOption)
     {
         var cleanupCommand = new Command("cleanup", "Clean up worktrees");
+        cleanupCommand.AddAlias("cl");
+        cleanupCommand.AddAlias("clean");
+        cleanupCommand.AddAlias("prune");
+        cleanupCommand.AddAlias("rm");
+        cleanupCommand.AddAlias("remove");
+        cleanupCommand.AddAlias("del");
+        cleanupCommand.AddAlias("delete");
 
         var modeOption = new Option<string?>("--mode", "Cleanup mode (all/remoteless/merged/interactive/github)");
         var dryRunOption = new Option<bool>("--dry-run", "Show what would be removed");
