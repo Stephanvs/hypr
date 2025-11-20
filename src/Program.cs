@@ -88,6 +88,11 @@ public class Program
     private static Command BuildSwitchCommand(ServiceProvider serviceProvider, Option<bool> debugOption, Option<bool> yesOption)
     {
         var switchCommand = new Command("switch", "Switch to or create a worktree for a branch");
+        switchCommand.AddAlias("sw");
+        switchCommand.AddAlias("checkout");
+        switchCommand.AddAlias("co");
+        switchCommand.AddAlias("goto");
+        switchCommand.AddAlias("go");
 
         var branchArg = new Argument<string>("branch", "Branch name or path");
         var terminalOption = new Option<string?>("--terminal", "Terminal mode (tab/window/inplace/echo/vscode/cursor)");
