@@ -164,7 +164,7 @@ public class ConfigLoader
             var keyStr = key?.ToString();
 
             // Support HYPRWT_
-            if (keyStr == null || !keyStr.StartsWith("HYPRWT_"))
+            if (key is null || keyStr is null || !keyStr.StartsWith("HYPRWT_"))
                 continue;
 
             var suffix = string.Empty;
