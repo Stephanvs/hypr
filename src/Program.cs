@@ -71,18 +71,6 @@ public static class Program
     {
         var switchCommand = new Command("switch", "Switch to or create a worktree for a branch");
 
-        // var branchArg = new Argument<string>("branch", "Branch name or path");
-        // var terminalOption = new Option<TerminalMode>("--terminal", "Terminal mode");
-        // var afterInitOption = new Option<string?>("--after-init", "Command to run after init script");
-        // var fromOption = new Option<string?>("--from", "Source branch/commit to create from");
-        // var dirOption = new Option<string?>("--dir", "Custom directory path");
-        //
-        // switchCommand.AddArgument(branchArg);
-        // switchCommand.AddOption(terminalOption);
-        // switchCommand.AddOption(afterInitOption);
-        // switchCommand.AddOption(fromOption);
-        // switchCommand.AddOption(dirOption);
-        //
         // switchCommand.SetHandler((InvocationContext ctx) =>
         // {
         //     var debug = ctx.ParseResult.GetValueForOption(debugOption);
