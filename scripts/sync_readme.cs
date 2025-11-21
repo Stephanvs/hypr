@@ -1,4 +1,4 @@
-#!/usr/bin/env dotnet run
+#!/usr/bin/dotnet run
 
 using System;
 using System.IO;
