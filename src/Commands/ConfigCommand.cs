@@ -1,3 +1,4 @@
+using System.CommandLine;
 using Hyprwt.Configuration;
 using Hyprwt.Models;
 using Microsoft.Extensions.Logging;
@@ -8,21 +9,69 @@ namespace Hyprwt.Commands;
 /// <summary>
 /// Manages configuration settings.
 /// </summary>
-public class ConfigCommandHandler
+public class ConfigCommand : Command
 {
-    private readonly ILogger<ConfigCommandHandler> _logger;
+    private readonly ILogger<ConfigCommand> _logger;
     private readonly ConfigLoader _configLoader;
 
-    public ConfigCommandHandler(ILogger<ConfigCommandHandler> logger, ConfigLoader configLoader)
+    public ConfigCommand(ILogger<ConfigCommand> logger, ConfigLoader configLoader)
+        : base("config", "Manage configuration settings")
     {
         _logger = logger;
         _configLoader = configLoader;
+
+        Aliases.Add("cfg");
+        Aliases.Add("conf");
+
+        Add(ShowOption);
+        Add(EditOption);
+
+        SetAction(Execute);
     }
 
-    /// <summary>
-    /// Shows current configuration.
-    /// </summary>
-    public int ShowConfig()
+    private Option<bool> ShowOption { get; } =
+        new("--show")
+        {
+            Description = "Show current configuration",
+        };
+
+    private Option<bool> EditOption { get; } =
+        new("--edit")
+        {
+            Description = "Edit configuration",
+        };
+
+    private int Execute(ParseResult ctx)
+    {
+        try
+        {
+            var show = ctx.GetValue(ShowOption);
+            var edit = ctx.GetValue(EditOption);
+
+            // Default to showing config if no option is specified
+            if (!show && !edit)
+            {
+                show = true;
+            }
+
+            if (edit)
+            {
+                return EditConfig();
+            }
+            else
+            {
+                return ShowConfig();
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to execute config command");
+            AnsiConsole.MarkupLine($"[red]Error:[/] {ex.Message}");
+            return 1;
+        }
+    }
+
+    private int ShowConfig()
     {
         try
         {
@@ -67,10 +116,7 @@ public class ConfigCommandHandler
         }
     }
 
-    /// <summary>
-    /// Interactive configuration editor (simplified for now).
-    /// </summary>
-    public int EditConfig()
+    private int EditConfig()
     {
         try
         {
