@@ -1,3 +1,4 @@
+using System.CommandLine;
 using Hyprwt.Configuration;
 using Hyprwt.Hooks;
 using Hyprwt.Models;
@@ -10,32 +11,82 @@ namespace Hyprwt.Commands;
 /// <summary>
 /// Switches to or creates a worktree for a branch.
 /// </summary>
-public class SwitchCommandHandler
+public class SwitchCommand : Command
 {
-    private readonly ILogger<SwitchCommandHandler> _logger;
+    private readonly ILogger<SwitchCommand> _logger;
     private readonly GitService _gitService;
     private readonly TerminalService _terminalService;
     private readonly ConfigLoader _configLoader;
     private readonly HookRunner _hookRunner;
 
-    public SwitchCommandHandler(
-        ILogger<SwitchCommandHandler> logger,
+    private Argument<string> BranchArgument { get; } =
+        new("branch")
+        {
+            Arity = ArgumentArity.ExactlyOne,
+            Description = "Branch name or path",
+        };
+
+    private Option<TerminalMode?> TerminalModeOption { get; } =
+        new("--terminal")
+        {
+            Aliases = { "-tm", "--term" },
+            Description = "Terminal mode",
+            DefaultValueFactory = _ => TerminalMode.Tab,
+        };
+
+    private Option<string?> AfterInitOption { get; } =
+        new("--after-init")
+        {
+            Aliases = { "-ai" },
+            Description = "Command to run after init script",
+        };
+
+    private Option<string?> FromBranchOption { get; } =
+        new("--from")
+        {
+            Aliases = { "-fb", "--from-branch" },
+            Description = "Source branch/commit to create from"
+        };
+
+    private Option<DirectoryInfo?> DirOption { get; } =
+        new("--dir")
+        {
+            Description = "Custom directory path",
+        };
+
+    private AutoConfirmOption AutoConfirmOption { get; } = new();
+
+    public SwitchCommand(
+        ILogger<SwitchCommand> logger,
         GitService gitService,
         TerminalService terminalService,
         ConfigLoader configLoader,
         HookRunner hookRunner)
+        : base("switch", "Switch to or create a worktree for a branch")
     {
         _logger = logger;
         _gitService = gitService;
         _terminalService = terminalService;
         _configLoader = configLoader;
         _hookRunner = hookRunner;
+
+        Aliases.Add("sw");
+        Aliases.Add("checkout");
+        Aliases.Add("co");
+        Aliases.Add("goto");
+        Aliases.Add("go");
+
+        Add(BranchArgument);
+        Add(FromBranchOption);
+        Add(TerminalModeOption);
+        Add(AfterInitOption);
+        Add(DirOption);
+        Add(AutoConfirmOption);
+
+        SetAction(Execute);
     }
 
-    /// <summary>
-    /// Executes the switch command.
-    /// </summary>
-    public int Execute(Models.SwitchCommand command)
+    private int Execute(ParseResult ctx)
     {
         try
         {
@@ -49,31 +100,37 @@ public class SwitchCommandHandler
             // Load configuration
             var config = _configLoader.LoadConfig(repoPath);
 
+            var branch = ctx.GetRequiredValue(BranchArgument);
+            var fromBranch = ctx.GetValue(FromBranchOption);
+            var terminalMode = ctx.GetValue(TerminalModeOption) ?? config.Terminal.Mode;
+            var initScript = ctx.GetValue(AfterInitOption) ?? config.Scripts.SessionInit;
+            var afterInit = ctx.GetValue(AfterInitOption);
+            var dir = ctx.GetValue(DirOption);
+
             // Check if worktree already exists
             var worktrees = _gitService.ListWorktrees(repoPath);
-            var existingWorktree = worktrees.FirstOrDefault(w => w.Branch == command.Branch);
+            var existingWorktree = worktrees.FirstOrDefault(w => w.Branch == branch);
 
             if (existingWorktree != null)
             {
                 // Switch to existing worktree
-                AnsiConsole.MarkupLine($"[green]Switching to existing worktree:[/] {command.Branch}");
+                AnsiConsole.MarkupLine($"[green]Switching to existing worktree:[/] {branch}");
 
-                var terminalMode = command.TerminalMode ?? config.Terminal.Mode;
                 var success = _terminalService.OpenWorktree(
                     existingWorktree.Path,
                     terminalMode,
-                    command.InitScript ?? config.Scripts.SessionInit,
-                    command.AfterInit
+                    initScript,
+                    afterInit
                 );
 
                 return success ? 0 : 1;
             }
 
             // Create new worktree
-            AnsiConsole.MarkupLine($"[yellow]Creating new worktree for branch:[/] {command.Branch}");
+            AnsiConsole.MarkupLine($"[yellow]Creating new worktree for branch:[/] {branch}");
 
             // Generate worktree path
-            var worktreePath = GenerateWorktreePath(repoPath, command.Branch, command.Dir, config);
+            var worktreePath = GenerateWorktreePath(repoPath, branch, dir, config);
 
             // Run pre-create hook
             if (config.Scripts.PreCreate != null)
@@ -83,7 +140,8 @@ public class SwitchCommandHandler
             }
 
             // Confirm creation if not auto-confirmed
-            if (!command.AutoConfirm)
+            var autoConfirm = ctx.GetValue(AutoConfirmOption);
+            if (!autoConfirm)
             {
                 if (!AnsiConsole.Confirm($"Create worktree at {worktreePath}?"))
                 {
@@ -96,8 +154,8 @@ public class SwitchCommandHandler
             var created = _gitService.CreateWorktree(
                 repoPath,
                 worktreePath,
-                command.Branch,
-                command.FromBranch
+                branch,
+                fromBranch
             );
 
             if (!created)
@@ -122,12 +180,11 @@ public class SwitchCommandHandler
             }
 
             // Open in terminal
-            var termMode = command.TerminalMode ?? config.Terminal.Mode;
             var opened = _terminalService.OpenWorktree(
                 worktreePath,
-                termMode,
-                command.InitScript ?? config.Scripts.SessionInit,
-                command.AfterInit
+                terminalMode,
+                initScript,
+                afterInit
             );
 
             return opened ? 0 : 1;
@@ -140,10 +197,10 @@ public class SwitchCommandHandler
         }
     }
 
-    private static string GenerateWorktreePath(string repoPath, string branch, string? customDir, Config config)
+    private static string GenerateWorktreePath(string repoPath, string branch, DirectoryInfo? customDir, Config config)
     {
-        if (customDir != null)
-            return Path.GetFullPath(customDir);
+        if (customDir is not null)
+            return customDir.FullName;
 
         // Use directory pattern from config
         var pattern = config.Worktree.DirectoryPattern;
