@@ -74,7 +74,7 @@ public class StateService
         try
         {
             var json = File.ReadAllText(_stateFile);
-            var state = JsonSerializer.Deserialize<AppState>(json);
+            var state = JsonSerializer.Deserialize(json, AppJsonSerializerContext.Default.AppState);
             _logger.LogDebug("State loaded successfully");
             return state ?? new AppState();
         }
@@ -92,10 +92,7 @@ public class StateService
     {
         try
         {
-            var json = JsonSerializer.Serialize(state, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            var json = JsonSerializer.Serialize(state, AppJsonSerializerContext.Default.AppState);
             File.WriteAllText(_stateFile, json);
             _logger.LogDebug("State saved successfully");
         }
