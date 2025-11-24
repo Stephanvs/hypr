@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Octokit;
 
@@ -144,5 +145,56 @@ public class GitHubService(ILogger<GitHubService> logger)
             logger.LogError(ex, "Failed to check for closed PR");
             return false;
         }
+    }
+
+    /// <summary>
+    /// Runs a process and captures its stdout and stderr.
+    /// </summary>
+    /// <param name="command">The command to run.</param>
+    /// <param name="args">Arguments for the command.</param>
+    /// <param name="repoRoot">The working directory for the process.</param>
+    /// <param name="timeout">Optional timeout for the process.</param>
+    /// <returns>A tuple containing stdout and stderr.</returns>
+    public async Task<(string stdout, string stderr)> RunProcess(string command, string[] args, string repoRoot, TimeSpan? timeout = null)
+    {
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = command,
+                Arguments = string.Join(" ", args.Select(arg => $"\"{arg}\"")),
+                WorkingDirectory = repoRoot,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                UseShellExecute = false,
+                CreateNoWindow = true
+            }
+        };
+
+        process.Start();
+
+        var stdoutTask = process.StandardOutput.ReadToEndAsync();
+        var stderrTask = process.StandardError.ReadToEndAsync();
+
+        if (timeout.HasValue)
+        {
+            var exitTask = process.WaitForExitAsync();
+            var completedTask = await Task.WhenAny(exitTask, Task.Delay(timeout.Value));
+
+            if (completedTask != exitTask)
+            {
+                process.Kill();
+                throw new TimeoutException("Process timed out");
+            }
+        }
+        else
+        {
+            await process.WaitForExitAsync();
+        }
+
+        string stdout = await stdoutTask;
+        string stderr = await stderrTask;
+
+        return (stdout, stderr);
     }
 }
