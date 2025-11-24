@@ -1,25 +1,36 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+   <PropertyGroup>
+     <OutputType>Exe</OutputType>
+     <TargetFramework>net10.0</TargetFramework>
+     <Nullable>enable</Nullable>
+     <ImplicitUsings>enable</ImplicitUsings>
 
-    <!-- Assembly Info -->
-    <AssemblyName>hyprwt</AssemblyName>
-    <Version>0.1.0</Version>
-    <Authors>Stephan van Stekelenburg</Authors>
-    <Description>Customizable git worktree manager</Description>
-    <Copyright>Copyright © 2025</Copyright>
-    <Product>hyprwt</Product>
+     <!-- Assembly Info -->
+     <AssemblyName>hyprwt</AssemblyName>
+     <Version>0.1.0</Version>
+     <Authors>Stephan van Stekelenburg</Authors>
+     <Description>Customizable git worktree manager</Description>
+     <Copyright>Copyright © 2025</Copyright>
+     <Product>hyprwt</Product>
+     <PackageId>hyprwt</PackageId>
+     <PackageTags>git;worktree;cli</PackageTags>
+     <RepositoryUrl>https://github.com/$(GITHUB_REPOSITORY)</RepositoryUrl>
+     <RepositoryType>git</RepositoryType>
+     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+     <PackageReadmeFile>README.md</PackageReadmeFile>
 
-    <!-- Publishing Configuration -->
-    <PublishSingleFile>true</PublishSingleFile>
-    <SelfContained>true</SelfContained>
-    <PublishTrimmed>true</PublishTrimmed>
-    <TrimMode>link</TrimMode>
-    <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
-  </PropertyGroup>
+     <!-- Dotnet Tool Configuration -->
+     <PackAsTool>true</PackAsTool>
+     <ToolCommandName>hyprwt</ToolCommandName>
+     <PackageOutputPath>./nupkg</PackageOutputPath>
+
+     <!-- Publishing Configuration -->
+     <PublishSingleFile>true</PublishSingleFile>
+     <SelfContained>true</SelfContained>
+     <PublishTrimmed>true</PublishTrimmed>
+     <TrimMode>link</TrimMode>
+     <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Scrutor" Version="6.1.0" />

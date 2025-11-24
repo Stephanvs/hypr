@@ -1,0 +1,137 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+
+jobs:
+  build-binaries:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+            name: linux-x64
+          - os: windows-latest
+            rid: win-x64
+            name: windows-x64
+          - os: macos-latest
+            rid: osx-x64
+            name: macos-x64
+          - os: macos-latest
+            rid: osx-arm64
+            name: macos-arm64
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+
+    - name: Test
+      run: dotnet test --no-restore --verbosity normal
+
+    - name: Publish binary
+      run: dotnet publish src/hyprwt.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.name }}
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: hyprwt-${{ matrix.name }}
+        path: ./publish/${{ matrix.name }}/
+
+  build-dotnet-tool:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Restore dependencies
+      run: dotnet restore
+
+    - name: Pack dotnet tool
+      run: dotnet pack src/hyprwt.csproj --configuration Release --output ./nupkg
+
+    - name: Upload dotnet tool package
+      uses: actions/upload-artifact@v4
+      with:
+        name: dotnet-tool
+        path: ./nupkg/
+
+  create-release:
+    needs: [build-binaries, build-dotnet-tool]
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: ./artifacts
+
+    - name: Create archives
+      run: |
+        cd artifacts
+        for dir in hyprwt-*; do
+          if [ -d "$dir" ]; then
+            tar -czf "${dir}.tar.gz" -C "$dir" .
+          fi
+        done
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          artifacts/*.tar.gz
+          artifacts/dotnet-tool/*.nupkg
+        generate_release_notes: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish-nuget:
+    needs: build-dotnet-tool
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x'
+
+    - name: Download dotnet tool package
+      uses: actions/download-artifact@v4
+      with:
+        name: dotnet-tool
+        path: ./nupkg
+
+    - name: NuGet Login (OIDC -> temp API key)
+      uses: NuGet/login@v1
+      id: login
+      with:
+        user: ${{ secrets.NUGET_USER }}
+
+    - name: Publish to NuGet
+      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
