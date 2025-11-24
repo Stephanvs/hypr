@@ -51,7 +51,7 @@ public class VersionCheckService
             var response = await client.GetStringAsync(
                 "https://api.github.com/repos/stephanvs/hyprwt/releases/latest");
 
-            var release = JsonSerializer.Deserialize<GitHubRelease>(response);
+            var release = JsonSerializer.Deserialize(response, AppJsonSerializerContext.Default.GitHubRelease);
             if (release == null)
                 return null;
 
@@ -110,7 +110,7 @@ public class VersionCheckService
         }
     }
 
-    private class GitHubRelease
+    internal class GitHubRelease
     {
         public string? tag_name { get; set; }
         public string? html_url { get; set; }
