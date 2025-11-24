@@ -19,7 +19,7 @@ public class PathProviderTests
   public void PathProvider_OnMacOS_GetGlobalConfigPath_ReturnsCorrectPath()
   {
     Assert.SkipUnless(OperatingSystem.IsMacOS(), "tests requires macOS");
-    var expectedPath = Path.Combine("/Users", Environment.UserName, "Library", "Application Support", "hyprwt", "config.json");
+    var expectedPath = Path.Combine("/Users", Environment.UserName, ".config", "hyprwt", "config.json");
     PathProvider.GetGlobalConfigPath().Should().Be(expectedPath);
   }
 
