@@ -16,9 +16,7 @@ public static class PathProvider
 
     var configDir = OperatingSystem.IsWindows()
       ? Path.Combine(appDataDir, "hyprwt")
-      : OperatingSystem.IsMacOS()
-        ? Path.Combine(appDataDir, "Library", "Application Support", "hyprwt")
-        : Path.Combine(appDataDir, ".config", "hyprwt");
+      : Path.Combine(appDataDir, ".config", "hyprwt");
 
     return Path.Combine(configDir, "config.json");
   }
