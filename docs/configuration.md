@@ -2,15 +2,15 @@
 
 `hyprwt` is designed to work out of the box with sensible defaults, but you can customize its behavior to perfectly match your workflow. This guide covers the different ways you can configure `hyprwt`, from global settings to project-specific rules and one-time command-line overrides.
 
-For a comprehensive example configuration file with comments explaining all options, see the [example_config.toml](https://github.com/irskep/hyprwt/blob/main/example_config.toml) in the repository.
+For a comprehensive example configuration file with comments explaining all options, see the [example_config.json](https://github.com/irskep/hyprwt/blob/main/example_config.json) in the repository.
 
 ## Configuration layers
 
 `hyprwt` uses a hierarchical configuration system. Settings are loaded from multiple sources, and later sources override earlier ones. The order of precedence is:
 
 1.  **Built-in Defaults**: Sensible defaults for all settings.
-2.  **Global `config.toml`**: User-wide settings that apply to all your projects.
-3.  **Project `.hyprwt.toml`**: Project-specific settings, defined in your repository's root.
+2.  **Global `config.json`**: User-wide settings that apply to all your projects.
+3.  **Project `.hyprwt.json`**: Project-specific settings, defined in your repository's root.
 4.  **Environment Variables**: System-wide overrides, prefixed with `HYPRWT_`.
 5.  **Command-Line Flags**: The highest priority, for on-the-fly adjustments.
 
@@ -18,17 +18,17 @@ For a comprehensive example configuration file with comments explaining all opti
 
 ### Global configuration
 
-Your global settings are stored in a `config.toml` file in a platform-appropriate directory:
+Your global settings are stored in a `config.json` file in a platform-appropriate directory:
 
-- **macOS**: `~/Library/Application Support/hyprwt/config.toml`
-- **Linux**: `~/.config/hyprwt/config.toml` (or `$XDG_CONFIG_HOME/hyprwt/config.toml`)
-- **Windows**: `~/.hyprwt/config.toml`
+- **macOS**: `~/Library/Application Support/hyprwt/config.json`
+- **Linux**: `~/.config/hyprwt/config.json` (or `$XDG_CONFIG_HOME/hyprwt/config.json`)
+- **Windows**: `%APPDATA%\hyprwt\config.json`
 
 The easiest way to manage common settings is with the `hyprwt config` command, which launches an interactive TUI (Text-based User Interface) for the most frequently used options. For the complete set of configuration options, you can edit the config file directly.
 
 ### Project-specific configuration
 
-For settings that should apply only to a specific project, create a `.hyprwt.toml` file in the root of your repository. This is the ideal place to define project-wide init scripts or worktree settings.
+For settings that should apply only to a specific project, create a `.hyprwt.json` file in the root of your repository. This is the ideal place to define project-wide init scripts or worktree settings.
 
 ## All configuration options
 
@@ -36,7 +36,7 @@ This section provides a comprehensive reference for all available configuration 
 
 ---
 
-### `[terminal]` - Terminal management
+### `terminal` - Terminal management
 
 Controls how `hyprwt` interacts with your terminal.
 
@@ -50,7 +50,7 @@ Controls how `hyprwt` interacts with your terminal.
 
 ---
 
-### `[worktree]` - Worktree management
+### `worktree` - Worktree management
 
 Defines how worktrees are created and managed.
 
@@ -64,7 +64,7 @@ Defines how worktrees are created and managed.
 
 ---
 
-### `[cleanup]` - Cleanup behavior
+### `cleanup` - Cleanup behavior
 
 Configures the `hyprwt cleanup` command.
 
@@ -76,21 +76,23 @@ Configures the `hyprwt cleanup` command.
 
 ---
 
-### `[scripts]` - Lifecycle hooks and scripts
+### `scripts` - Lifecycle hooks and scripts
 
 See [Lifecycle Hooks](lifecyclehooks.md).
 
-#### `[scripts.custom]`
+#### `scripts.custom`
 
 Define named, reusable scripts for specialized workflows.
 
-```toml
-[scripts.custom]
-# Example: hyprwt my-branch --custom-script="bugfix"
-bugfix = 'claude "Fix the bug described in GitHub issue $1"'
-
-# Example: hyprwt release-branch --custom-script="release"
-release = 'claude "/release"'
+```json
+{
+  "Scripts": {
+    "Custom": {
+      "bugfix": "claude \"Fix the bug described in GitHub issue $1\"",
+      "release": "claude \"/release\""
+    }
+  }
+}
 ```
 
 These are run _after_ the standard `session_init` script. You can invoke them with the `--custom-script` flag, and any additional arguments are passed to the script. For one-time commands, the `--after-init` flag is often simpler.
@@ -99,7 +101,7 @@ This feature is very bare-bones, and is intended to lay the groundwork for futur
 
 ---
 
-### `[confirmations]` - User interface
+### `confirmations` - User interface
 
 Manage which operations require a confirmation prompt.
 

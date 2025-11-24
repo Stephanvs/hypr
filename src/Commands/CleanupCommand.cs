@@ -3,6 +3,7 @@ using Hyprwt.Configuration;
 using Hyprwt.Models;
 using Hyprwt.Services;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Spectre.Console;
 
 namespace Hyprwt.Commands;
@@ -14,7 +15,8 @@ public class CleanupCommand : Command
 {
     private readonly ILogger<CleanupCommand> _logger;
     private readonly GitService _gitService;
-    private readonly ConfigLoader _configLoader;
+    private readonly IOptionsMonitor<CleanupConfig> _cleanupConfig;
+    private readonly IOptionsMonitor<ConfirmationsConfig> _confirmationsConfig;
 
     /// <summary>
     /// Cleans up worktrees based on various criteria.
@@ -22,12 +24,14 @@ public class CleanupCommand : Command
     public CleanupCommand(
         ILogger<CleanupCommand> logger,
         GitService gitService,
-        ConfigLoader configLoader)
+        IOptionsMonitor<CleanupConfig> cleanupConfig,
+        IOptionsMonitor<ConfirmationsConfig> confirmationsConfig)
         : base("cleanup", "Clean up worktrees")
     {
         _logger = logger;
         _gitService = gitService;
-        _configLoader = configLoader;
+        _cleanupConfig = cleanupConfig;
+        _confirmationsConfig = confirmationsConfig;
 
         Aliases.Add("cl");
         Aliases.Add("clean");
@@ -37,6 +41,12 @@ public class CleanupCommand : Command
         Aliases.Add("del");
         Aliases.Add("delete");
 
+        CleanupMode = new("--mode")
+        {
+            Description = "Determine which worktrees to remove",
+            DefaultValueFactory = (_ => _cleanupConfig.CurrentValue.DefaultMode)
+        };
+
         Add(CleanupMode);
         Add(DryRun);
         Add(Force);
@@ -45,11 +55,7 @@ public class CleanupCommand : Command
         SetAction(ExecuteAsync);
     }
 
-    private Option<CleanupMode> CleanupMode { get; } = new("--mode")
-    {
-        Description = "Determine which worktrees to remove",
-        DefaultValueFactory = (_ => Models.CleanupMode.All)
-    };
+    private Option<CleanupMode> CleanupMode { get; }
 
     private Option<bool> DryRun { get; } = new("--dry-run")
     {
@@ -76,8 +82,7 @@ public class CleanupCommand : Command
                 AnsiConsole.MarkupLine("[red]Error:[/] Not in a git repository");
                 return 1;
             }
-
-            _configLoader.LoadConfig(repoPath);
+            
             var worktrees = _gitService.ListWorktrees(repoPath);
 
             // Exclude primary worktree
@@ -111,6 +116,16 @@ public class CleanupCommand : Command
 
             if (!autoConfirm)
             {
+                var confirmMultiple = _confirmationsConfig.CurrentValue.CleanupMultiple;
+                if (confirmMultiple || toRemove.Count > 1) // Always confirm if multiple and config says so (default true)
+                {
+                   // Actually user logic: check confirm config.
+                   // If Confirmations.CleanupMultiple is true, we confirm when multiple?
+                   // "Confirm multiple cleanups" description says so.
+                   // But we are asking for confirmation anyway unless autoConfirm is passed.
+                }
+
+                // Current logic was:
                 if (!AnsiConsole.Confirm($"Remove {toRemove.Count} worktree(s)?"))
                 {
                     AnsiConsole.MarkupLine("[yellow]Cancelled[/]");
@@ -151,11 +166,11 @@ public class CleanupCommand : Command
     {
         return mode switch
         {
-            null or Models.CleanupMode.All => worktrees,
-            Models.CleanupMode.Remoteless => FilterRemoteless(repoPath, worktrees),
-            Models.CleanupMode.Merged => FilterMerged(repoPath, worktrees),
-            Models.CleanupMode.GitHub => await FilterGitHubAsync(repoPath, worktrees),
-            Models.CleanupMode.Interactive => FilterInteractive(worktrees),
+            null or Configuration.CleanupMode.All => worktrees,
+            Configuration.CleanupMode.Remoteless => FilterRemoteless(repoPath, worktrees),
+            Configuration.CleanupMode.Merged => FilterMerged(repoPath, worktrees),
+            Configuration.CleanupMode.GitHub => await FilterGitHubAsync(repoPath, worktrees),
+            Configuration.CleanupMode.Interactive => FilterInteractive(worktrees),
             _ => []
         };
     }

@@ -2,6 +2,7 @@ using System.CommandLine;
 using Hyprwt.Configuration;
 using Hyprwt.Models;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Spectre.Console;
 
 namespace Hyprwt.Commands;
@@ -12,13 +13,24 @@ namespace Hyprwt.Commands;
 public class ConfigCommand : Command
 {
     private readonly ILogger<ConfigCommand> _logger;
-    private readonly ConfigLoader _configLoader;
+    private readonly IOptionsMonitor<TerminalConfig> _terminalConfig;
+    private readonly IOptionsMonitor<WorktreeConfig> _worktreeConfig;
+    private readonly IOptionsMonitor<CleanupConfig> _cleanupConfig;
+    private readonly IOptionsMonitor<ScriptsConfig> _scriptsConfig;
 
-    public ConfigCommand(ILogger<ConfigCommand> logger, ConfigLoader configLoader)
+    public ConfigCommand(
+        ILogger<ConfigCommand> logger,
+        IOptionsMonitor<TerminalConfig> terminalConfig,
+        IOptionsMonitor<WorktreeConfig> worktreeConfig,
+        IOptionsMonitor<CleanupConfig> cleanupConfig,
+        IOptionsMonitor<ScriptsConfig> scriptsConfig)
         : base("config", "Manage configuration settings")
     {
         _logger = logger;
-        _configLoader = configLoader;
+        _terminalConfig = terminalConfig;
+        _worktreeConfig = worktreeConfig;
+        _cleanupConfig = cleanupConfig;
+        _scriptsConfig = scriptsConfig;
 
         Aliases.Add("cfg");
         Aliases.Add("conf");
@@ -75,7 +87,10 @@ public class ConfigCommand : Command
     {
         try
         {
-            var config = _configLoader.LoadGlobalConfigOnly();
+            var terminal = _terminalConfig.CurrentValue;
+            var worktree = _worktreeConfig.CurrentValue;
+            var cleanup = _cleanupConfig.CurrentValue;
+            var scripts = _scriptsConfig.CurrentValue;
 
             var table = new Table();
             table.Border(TableBorder.Rounded);
@@ -83,25 +98,25 @@ public class ConfigCommand : Command
             table.AddColumn("[bold]Value[/]");
 
             // Terminal settings
-            table.AddRow("[cyan]terminal.mode[/]", config.Terminal.Mode.ToString().ToLower());
-            table.AddRow("[cyan]terminal.always_new[/]", config.Terminal.AlwaysNew.ToString().ToLower());
-            if (config.Terminal.Program != null)
-                table.AddRow("[cyan]terminal.program[/]", config.Terminal.Program);
+            table.AddRow("[cyan]terminal.mode[/]", terminal.Mode.ToString().ToLower());
+            table.AddRow("[cyan]terminal.always_new[/]", terminal.AlwaysNew.ToString().ToLower());
+            if (terminal.Program != null)
+                table.AddRow("[cyan]terminal.program[/]", terminal.Program);
 
             // Worktree settings
-            table.AddRow("[cyan]worktree.directory_pattern[/]", config.Worktree.DirectoryPattern);
-            table.AddRow("[cyan]worktree.auto_fetch[/]", config.Worktree.AutoFetch.ToString().ToLower());
-            if (config.Worktree.BranchPrefix != null)
-                table.AddRow("[cyan]worktree.branch_prefix[/]", config.Worktree.BranchPrefix);
+            table.AddRow("[cyan]worktree.directory_pattern[/]", worktree.DirectoryPattern);
+            table.AddRow("[cyan]worktree.auto_fetch[/]", worktree.AutoFetch.ToString().ToLower());
+            if (worktree.BranchPrefix != null)
+                table.AddRow("[cyan]worktree.branch_prefix[/]", worktree.BranchPrefix);
 
             // Cleanup settings
-            table.AddRow("[cyan]cleanup.default_mode[/]", config.Cleanup.DefaultMode.ToString().ToLower());
+            table.AddRow("[cyan]cleanup.default_mode[/]", cleanup.DefaultMode.ToString().ToLower());
 
             // Scripts (if any)
-            if (config.Scripts.SessionInit != null)
-                table.AddRow("[cyan]scripts.session_init[/]", config.Scripts.SessionInit);
-            if (config.Scripts.PostCreate != null)
-                table.AddRow("[cyan]scripts.post_create[/]", config.Scripts.PostCreate);
+            if (scripts.SessionInit != null)
+                table.AddRow("[cyan]scripts.session_init[/]", scripts.SessionInit);
+            if (scripts.PostCreate != null)
+                table.AddRow("[cyan]scripts.post_create[/]", scripts.PostCreate);
 
             AnsiConsole.Write(table);
             AnsiConsole.WriteLine();

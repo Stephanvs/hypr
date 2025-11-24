@@ -1,0 +1,33 @@
+{
+  "terminal": {
+    "mode": "tab",
+    "alwaysNew": false,
+    "program": null
+  },
+  "worktree": {
+    "directoryPattern": "../{repo_name}-worktrees/{branch}",
+    "autoFetch": true,
+    "branchPrefix": null
+  },
+  "cleanup": {
+    "defaultMode": "interactive"
+  },
+  "scripts": {
+    "sessionInit": "echo 'Always run after creating a new worktree; copy env vars & install dependencies'",
+    "preCreate": null,
+    "postCreate": null,
+    "postCreateAsync": null,
+    "preCleanup": null,
+    "postCleanup": null,
+    "preSwitch": null,
+    "postSwitch": null,
+    "custom": {
+      "bugfix": "claude \"Fix the bug described in GitHub issue $1\"",
+      "release": "claude \"/release\""
+    }
+  },
+  "confirmations": {
+    "cleanupMultiple": true,
+    "forceOperations": true
+  }
+}

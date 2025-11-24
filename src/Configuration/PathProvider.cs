@@ -1,26 +1,25 @@
-using System.Runtime.InteropServices;
-
 namespace Hyprwt.Configuration;
 
 public static class PathProvider
 {
   /// <summary>
-  /// Gets the default configuration directory based on the platform.
+  /// Gets the global configuration file path based on the platform.
   /// </summary>
-  /// <returns>The configuration directory path.</returns>
-  public static string GetDefaultConfigDirectory()
+  public static string GetGlobalConfigPath()
   {
-    if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+    var appDataDir = Environment.GetFolderPath(
+      Environment.OSVersion.Platform == PlatformID.Win32NT
+        ? Environment.SpecialFolder.ApplicationData
+        : Environment.SpecialFolder.UserProfile);
+
+    var configDir = Environment.OSVersion.Platform switch
     {
-      // Windows: %APPDATA%\hyprwt
-      var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-      return Path.Combine(appData, "hyprwt");
-    }
-    else
-    {
-      // Linux/macOS: ~/.config/hyprwt
-      var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-      return Path.Combine(home, ".config", "hyprwt");
-    }
+      PlatformID.Win32NT => Path.Combine(appDataDir, "hyprwt"),
+      PlatformID.Unix => Path.Combine(appDataDir, ".config", "hyprwt"),
+      PlatformID.MacOSX => Path.Combine(appDataDir, "Library", "Application Support", "hyprwt"),
+      _ => Path.Combine(appDataDir, ".config", "hyprwt")
+    };
+
+    return Path.Combine(configDir, "config.json");
   }
 }

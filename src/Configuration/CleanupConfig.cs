@@ -1,27 +1,14 @@
-namespace Hyprwt.Models;
+namespace Hyprwt.Configuration;
 
 /// <summary>
-/// Terminal switching modes.
+/// Configuration settings for cleanup behavior.
 /// </summary>
-public enum TerminalMode
+public class CleanupConfig
 {
-    /// <summary>Open in new tab.</summary>
-    Tab,
-
-    /// <summary>Open in new window.</summary>
-    Window,
-
-    /// <summary>Change directory in current session.</summary>
-    Inplace,
-
-    /// <summary>Print cd command only.</summary>
-    Echo,
-
-    /// <summary>Open in VSCode.</summary>
-    VSCode,
-
-    /// <summary>Open in Cursor.</summary>
-    Cursor
+    /// <summary>
+    /// Default cleanup mode.
+    /// </summary>
+    public CleanupMode DefaultMode { get; set; } = CleanupMode.Interactive;
 }
 
 /// <summary>

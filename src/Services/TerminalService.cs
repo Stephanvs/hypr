@@ -1,8 +1,7 @@
-using Hyprwt.Models;
 using Hyprwt.Utils;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using System.Runtime.InteropServices;
+using Hyprwt.Configuration;
 
 namespace Hyprwt.Services;
 

@@ -12,18 +12,35 @@ namespace Hyprwt.Services;
 public class StateService
 {
     private readonly ILogger<StateService> _logger;
-    private readonly ConfigLoader _configLoader;
     private readonly string _appDir;
     private readonly string _stateFile;
 
-    public StateService(ILogger<StateService> logger, ConfigLoader configLoader)
+    public StateService(ILogger<StateService> logger)
     {
         _logger = logger;
-        _configLoader = configLoader;
-        _appDir = PathProvider.GetDefaultConfigDirectory();
+        _appDir = GetAppDirectory();
         _stateFile = Path.Combine(_appDir, "state.json");
 
         EnsureAppDirectoryExists();
+    }
+
+    /// <summary>
+    /// Gets the application directory based on platform.
+    /// </summary>
+    private static string GetAppDirectory()
+    {
+        var appDataDir = Environment.GetFolderPath(
+            Environment.OSVersion.Platform == PlatformID.Win32NT 
+                ? Environment.SpecialFolder.ApplicationData 
+                : Environment.SpecialFolder.UserProfile);
+        
+        return Environment.OSVersion.Platform switch
+        {
+            PlatformID.Win32NT => Path.Combine(appDataDir, "hyprwt"),
+            PlatformID.Unix => Path.Combine(appDataDir, ".config", "hyprwt"),
+            PlatformID.MacOSX => Path.Combine(appDataDir, "Library", "Application Support", "hyprwt"),
+            _ => Path.Combine(appDataDir, ".config", "hyprwt")
+        };
     }
 
     /// <summary>

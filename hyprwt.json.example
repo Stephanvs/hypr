@@ -1,0 +1,10 @@
+{
+  "worktree": {
+    "directoryPattern": "../worktrees/{branch}",
+    "autoFetch": false
+  },
+  "scripts": {
+    "sessionInit": "source .env && npm install",
+    "postCreate": "cp .env.example .env"
+  }
+}

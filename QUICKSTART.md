@@ -29,30 +29,35 @@ hyprwt config
 ## Configuration
 
 **Config files**
-- Global: `~/.config/hyprwt/config.toml` (Linux/macOS) or `%APPDATA%\hyprwt\config.toml` (Windows)
-- Project: `hyprwt.toml` or `.hyprwt.toml` (in repo root)
-- Backward compatible: Reads `hyprwt.toml` and `.hyprwt.toml`
+
+- Global: `~/.config/hyprwt/config.json` (Linux/macOS) or `%APPDATA%\hyprwt\config.json` (Windows)
+- Project: `hyprwt.json` or `.hyprwt.json` (in repo root)
+- Backward compatible: Reads `hyprwt.json` and `.hyprwt.json`
 
 **Environment variables**
+
 - `HYPRWT_TERMINAL_MODE` - Terminal mode (tab/window/inplace/echo/vscode/cursor)
 - `HYPRWT_WORKTREE_AUTO_FETCH` - Auto fetch (true/false)
 - `HYPRWT_CLEANUP_DEFAULT_MODE` - Default cleanup mode
 
 **Example config**
-```toml
-[terminal]
-mode = "tab"
-always_new = false
-
-[worktree]
-directory_pattern = "../{repo_name}-worktrees/{branch}"
-auto_fetch = true
-
-[cleanup]
-default_mode = "interactive"
-
-[scripts]
-session_init = "source .env"
-post_create = "npm install"
+```json
+{
+    "Terminal": {
+      "Mode": "tab",
+      "AlwaysNew": false
+    },
+    "Worktree": {
+      "DirectoryPattern": "../{repo_name}-worktrees/{branch}",
+      "AutoFetch": true
+    },
+    "Cleanup": {
+      "DefaultMode": "interactive"
+    },
+    "Scripts": {
+      "SessionInit": "source .env",
+      "PostCreate": "npm install"
+    }
+}
 ```
 
