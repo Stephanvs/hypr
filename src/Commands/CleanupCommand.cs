@@ -228,19 +228,19 @@ public class CleanupCommand : Command
             {
                 var prStatus = await _gitHubService.GetPullRequestStatusForBranch(repoPath, wt.Branch);
 
-                // Only remove if PR is merged or closed
-                if (prStatus == GitHubService.PrStatus.Merged || prStatus == GitHubService.PrStatus.Closed)
+                switch (prStatus)
                 {
-                    result.Add(wt);
-                    AnsiConsole.MarkupLine($"  [dim]Branch {wt.Branch} has {prStatus.ToString().ToLower()} PR[/]");
-                }
-                else if (prStatus == GitHubService.PrStatus.Open)
-                {
-                    AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - PR is still open[/]");
-                }
-                else
-                {
-                    AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - no PR found[/]");
+                    // Only remove if PR is merged or closed
+                    case GitHubService.PrStatus.Merged or GitHubService.PrStatus.Closed:
+                        result.Add(wt);
+                        AnsiConsole.MarkupLine($"  [dim]Branch {wt.Branch} has {prStatus.ToString().ToLower()} PR[/]");
+                        break;
+                    case GitHubService.PrStatus.Open:
+                        AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - PR is still open[/]");
+                        break;
+                    default:
+                        AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - no PR found[/]");
+                        break;
                 }
             }
             catch (Exception ex)
