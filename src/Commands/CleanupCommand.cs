@@ -46,6 +46,7 @@ public class CleanupCommand : Command
 
         CleanupMode = new Option<CleanupMode>("--mode")
         {
+            Aliases = { "-m" },
             Description = "Determine which worktrees to remove",
             DefaultValueFactory = (_ => _cleanupConfig.CurrentValue.DefaultMode)
         };
@@ -62,11 +63,13 @@ public class CleanupCommand : Command
 
     private Option<bool> DryRun { get; } = new("--dry-run")
     {
+        Aliases = { "-d" },
         Description = "Show what would be removed, but don't actually remove anything"
     };
 
     private Option<bool> Force { get; } = new("--force")
     {
+        Aliases = { "-f" },
         Description = "Force removal of non-empty worktrees"
     };
 
