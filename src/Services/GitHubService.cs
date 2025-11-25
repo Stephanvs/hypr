@@ -1,9 +1,30 @@
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Octokit;
 
 namespace Hyprwt.Services;
+
+public enum PrStatus
+{
+    Open,
+    Closed,
+    Merged,
+    None
+}
+
+public record PrInfo(string State, string Number, string HeadRefName);
+
+/// <summary>
+/// JSON source generation context for GitHubService.
+/// </summary>
+[JsonSerializable(typeof(List<PrInfo>))]
+internal partial class GitHubJsonContext : JsonSerializerContext
+{
+}
 
 /// <summary>
 /// GitHub API service for hyprwt.
@@ -184,21 +205,25 @@ public class GitHubService(ILogger<GitHubService> logger)
 
         try
         {
-            var prs = JsonSerializer.Deserialize<List<PrInfo>>(stdout);
+            var prs = JsonSerializer.Deserialize<List<PrInfo>>(stdout, GitHubJsonContext.Default.Options);
 
-            if (prs is { Count: 0 })
+            switch (prs)
             {
-                logger.LogDebug("No PRs found for branch {Branch}", branch);
-                return PrStatus.None;
+                case { Count: 0 }:
+                    logger.LogDebug("No PRs found for branch {Branch}", branch);
+                    return PrStatus.None;
+                case null:
+                    return PrStatus.Open;
             }
 
             foreach (var pr in prs)
             {
-                if (pr.State.Equals("MERGED", StringComparison.OrdinalIgnoreCase))
+                if (pr?.State?.Equals("MERGED", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     return PrStatus.Merged;
                 }
-                if (pr.State.Equals("CLOSED", StringComparison.OrdinalIgnoreCase))
+
+                if (pr?.State?.Equals("CLOSED", StringComparison.OrdinalIgnoreCase) == true)
                 {
                     return PrStatus.Closed;
                 }
@@ -213,15 +238,6 @@ public class GitHubService(ILogger<GitHubService> logger)
         }
     }
 
-    public enum PrStatus
-    {
-        Open,
-        Closed,
-        Merged,
-        None
-    }
-
-    public record PrInfo(string State, string Number, string HeadRefName);
 
     /// <summary>
     /// Runs a process and captures its stdout and stderr.

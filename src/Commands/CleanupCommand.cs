@@ -216,7 +216,7 @@ public class CleanupCommand : Command
     private async Task<List<WorktreeInfo>> FilterGitHubAsync(string repoPath, List<WorktreeInfo> worktrees)
     {
         // Check if this is a GitHub repository
-        var (isGitHubRepo, remoteName) = _gitService.IsGitHubRepo(repoPath);
+        var (isGitHubRepo, _) = _gitService.IsGitHubRepo(repoPath);
         if (!isGitHubRepo)
         {
             AnsiConsole.MarkupLine("[yellow]Not a GitHub repository, no worktrees will be removed[/]");
@@ -234,11 +234,11 @@ public class CleanupCommand : Command
                 switch (prStatus)
                 {
                     // Only remove if PR is merged or closed
-                    case GitHubService.PrStatus.Merged or GitHubService.PrStatus.Closed:
+                    case PrStatus.Merged or PrStatus.Closed:
                         result.Add(wt);
                         AnsiConsole.MarkupLine($"  [dim]Branch {wt.Branch} has {prStatus.ToString().ToLower()} PR[/]");
                         break;
-                    case GitHubService.PrStatus.Open:
+                    case PrStatus.Open:
                         AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - PR is still open[/]");
                         break;
                     default:
