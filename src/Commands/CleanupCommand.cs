@@ -215,6 +215,13 @@ public class CleanupCommand : Command
 
     private async Task<List<WorktreeInfo>> FilterGitHubAsync(string repoPath, List<WorktreeInfo> worktrees)
     {
+        // Check if gh CLI is available and authenticated
+        if (!await _gitHubService.IsGitHubCliAvailable())
+        {
+            AnsiConsole.MarkupLine("[red]Error:[/] GitHub CLI (gh) is not installed or not authenticated. Please install gh and run 'gh auth login' first.");
+            return [];
+        }
+
         // Check if this is a GitHub repository
         var (isGitHubRepo, _) = _gitService.IsGitHubRepo(repoPath);
         if (!isGitHubRepo)

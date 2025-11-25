@@ -190,9 +190,31 @@ public class GitHubService(ILogger<GitHubService> logger)
         }
     }
 
+    /// <summary>
+    /// Checks if gh CLI is available and authenticated.
+    /// </summary>
+    /// <returns>True if gh CLI is available and authenticated.</returns>
+    public async Task<bool> IsGitHubCliAvailable()
+    {
+        try
+        {
+            var (exitCode, stdout, stderr) = await RunProcessAsync(
+                "gh", ["auth", "status"],
+                Environment.CurrentDirectory,
+                TimeSpan.FromSeconds(10));
+
+            return exitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to check gh CLI availability");
+            return false;
+        }
+    }
+
     public async Task<PrStatus> GetPullRequestStatusForBranch(string repoPath, string branch)
     {
-        var (exitCode, stderr, stdout) = await RunProcessAsync(
+        var (exitCode, stdout, stderr) = await RunProcessAsync(
           "gh", ["pr", "list", "--head", branch, "--state", "all", "--json", "state,number,headRefName", "--limit", "10"],
           repoPath,
           TimeSpan.FromSeconds(30));
@@ -213,7 +235,8 @@ public class GitHubService(ILogger<GitHubService> logger)
                     logger.LogDebug("No PRs found for branch {Branch}", branch);
                     return PrStatus.None;
                 case null:
-                    return PrStatus.Open;
+                    logger.LogDebug("Failed to deserialize PRs for branch {Branch}", branch);
+                    return PrStatus.None;
             }
 
             foreach (var pr in prs)
