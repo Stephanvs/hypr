@@ -15,6 +15,7 @@ public class CleanupCommand : Command
 {
     private readonly ILogger<CleanupCommand> _logger;
     private readonly GitService _gitService;
+    private readonly GitHubService _gitHubService;
     private readonly IOptionsMonitor<CleanupConfig> _cleanupConfig;
     private readonly IOptionsMonitor<ConfirmationsConfig> _confirmationsConfig;
 
@@ -22,16 +23,18 @@ public class CleanupCommand : Command
     /// Cleans up worktrees based on various criteria.
     /// </summary>
     public CleanupCommand(
-        ILogger<CleanupCommand> logger,
         GitService gitService,
+        GitHubService gitHubService,
         IOptionsMonitor<CleanupConfig> cleanupConfig,
-        IOptionsMonitor<ConfirmationsConfig> confirmationsConfig)
+        IOptionsMonitor<ConfirmationsConfig> confirmationsConfig,
+        ILogger<CleanupCommand> logger)
         : base("cleanup", "Clean up worktrees")
     {
-        _logger = logger;
         _gitService = gitService;
+        _gitHubService = gitHubService;
         _cleanupConfig = cleanupConfig;
         _confirmationsConfig = confirmationsConfig;
+        _logger = logger;
 
         Aliases.Add("cl");
         Aliases.Add("clean");
@@ -41,7 +44,7 @@ public class CleanupCommand : Command
         Aliases.Add("del");
         Aliases.Add("delete");
 
-        CleanupMode = new("--mode")
+        CleanupMode = new Option<CleanupMode>("--mode")
         {
             Description = "Determine which worktrees to remove",
             DefaultValueFactory = (_ => _cleanupConfig.CurrentValue.DefaultMode)
@@ -82,7 +85,7 @@ public class CleanupCommand : Command
                 AnsiConsole.MarkupLine("[red]Error:[/] Not in a git repository");
                 return 1;
             }
-            
+
             var worktrees = _gitService.ListWorktrees(repoPath);
 
             // Exclude primary worktree
@@ -119,10 +122,10 @@ public class CleanupCommand : Command
                 var confirmMultiple = _confirmationsConfig.CurrentValue.CleanupMultiple;
                 if (confirmMultiple || toRemove.Count > 1) // Always confirm if multiple and config says so (default true)
                 {
-                   // Actually user logic: check confirm config.
-                   // If Confirmations.CleanupMultiple is true, we confirm when multiple?
-                   // "Confirm multiple cleanups" description says so.
-                   // But we are asking for confirmation anyway unless autoConfirm is passed.
+                    // Actually user logic: check confirm config.
+                    // If Confirmations.CleanupMultiple is true, we confirm when multiple?
+                    // "Confirm multiple cleanups" description says so.
+                    // But we are asking for confirmation anyway unless autoConfirm is passed.
                 }
 
                 // Current logic was:
@@ -209,10 +212,45 @@ public class CleanupCommand : Command
 
     private async Task<List<WorktreeInfo>> FilterGitHubAsync(string repoPath, List<WorktreeInfo> worktrees)
     {
-        // TODO: Implement GitHub PR-based filtering
-        // Need to extract owner/repo from git remote
-        AnsiConsole.MarkupLine("[yellow]GitHub mode not yet fully implemented, falling back to merged[/]");
-        return FilterMerged(repoPath, worktrees);
+        // Check if this is a GitHub repository
+        var (isGitHubRepo, remoteName) = _gitService.IsGitHubRepo(repoPath);
+        if (!isGitHubRepo)
+        {
+            AnsiConsole.MarkupLine("[yellow]Not a GitHub repository, no worktrees will be removed[/]");
+            return [];
+        }
+
+        var result = new List<WorktreeInfo>();
+
+        foreach (var wt in worktrees)
+        {
+            try
+            {
+                var prStatus = await _gitHubService.GetPullRequestStatusForBranch(repoPath, wt.Branch);
+
+                // Only remove if PR is merged or closed
+                if (prStatus == GitHubService.PrStatus.Merged || prStatus == GitHubService.PrStatus.Closed)
+                {
+                    result.Add(wt);
+                    AnsiConsole.MarkupLine($"  [dim]Branch {wt.Branch} has {prStatus.ToString().ToLower()} PR[/]");
+                }
+                else if (prStatus == GitHubService.PrStatus.Open)
+                {
+                    AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - PR is still open[/]");
+                }
+                else
+                {
+                    AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - no PR found[/]");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to check PR status for branch {Branch}", wt.Branch);
+                AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - failed to check PR status[/]");
+            }
+        }
+
+        return result;
     }
 
     private static List<WorktreeInfo> FilterInteractive(List<WorktreeInfo> worktrees)

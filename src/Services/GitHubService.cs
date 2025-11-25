@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Octokit;
 
@@ -147,6 +148,81 @@ public class GitHubService(ILogger<GitHubService> logger)
         }
     }
 
+    public async Task<string?> GetGitHubUsername()
+    {
+        try
+        {
+            var (exitCode, stdout, _) = await RunProcessAsync(
+              "gh",
+              ["api", "user", "--jq", ".login"],
+              Environment.CurrentDirectory,
+              TimeSpan.FromSeconds(10));
+
+            return exitCode == 0
+              ? stdout.Trim()
+              : null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to get GitHub username");
+            return null;
+        }
+    }
+
+    public async Task<PrStatus> GetPullRequestStatusForBranch(string repoPath, string branch)
+    {
+        var (exitCode, stderr, stdout) = await RunProcessAsync(
+          "gh", ["pr", "list", "--head", branch, "--state", "all", "--json", "state,number,headRefName", "--limit", "10"],
+          repoPath,
+          TimeSpan.FromSeconds(30));
+
+        if (exitCode != 0)
+        {
+            logger.LogError("Failed to get PRs for branch {Branch}: {Error}", branch, stderr);
+            return PrStatus.None;
+        }
+
+        try
+        {
+            var prs = JsonSerializer.Deserialize<List<PrInfo>>(stdout);
+
+            if (prs is { Count: 0 })
+            {
+                logger.LogDebug("No PRs found for branch {Branch}", branch);
+                return PrStatus.None;
+            }
+
+            foreach (var pr in prs)
+            {
+                if (pr.State.Equals("MERGED", StringComparison.OrdinalIgnoreCase))
+                {
+                    return PrStatus.Merged;
+                }
+                if (pr.State.Equals("CLOSED", StringComparison.OrdinalIgnoreCase))
+                {
+                    return PrStatus.Closed;
+                }
+            }
+
+            return PrStatus.Open;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to deserialize PRs for branch {Branch}", branch);
+            return PrStatus.None;
+        }
+    }
+
+    public enum PrStatus
+    {
+        Open,
+        Closed,
+        Merged,
+        None
+    }
+
+    public record PrInfo(string State, string Number, string HeadRefName);
+
     /// <summary>
     /// Runs a process and captures its stdout and stderr.
     /// </summary>
@@ -154,8 +230,8 @@ public class GitHubService(ILogger<GitHubService> logger)
     /// <param name="args">Arguments for the command.</param>
     /// <param name="repoRoot">The working directory for the process.</param>
     /// <param name="timeout">Optional timeout for the process.</param>
-    /// <returns>A tuple containing stdout and stderr.</returns>
-    public async Task<(string stdout, string stderr)> RunProcess(string command, string[] args, string repoRoot, TimeSpan? timeout = null)
+    /// <returns>A tuple containing exitCode, stdout and stderr.</returns>
+    public static async Task<(int exitCode, string stdout, string stderr)> RunProcessAsync(string command, string[] args, string repoRoot, TimeSpan? timeout = null)
     {
         var process = new Process
         {
@@ -184,7 +260,7 @@ public class GitHubService(ILogger<GitHubService> logger)
             if (completedTask != exitTask)
             {
                 process.Kill();
-                throw new TimeoutException("Process timed out");
+                throw new TimeoutException("Timeout exceeded, process killed");
             }
         }
         else
@@ -192,9 +268,9 @@ public class GitHubService(ILogger<GitHubService> logger)
             await process.WaitForExitAsync();
         }
 
-        string stdout = await stdoutTask;
-        string stderr = await stderrTask;
+        var stdout = await stdoutTask;
+        var stderr = await stderrTask;
 
-        return (stdout, stderr);
+        return (process.ExitCode, stdout, stderr);
     }
 }
