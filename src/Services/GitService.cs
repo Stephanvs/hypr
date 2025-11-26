@@ -72,13 +72,13 @@ public class GitService(ILogger<GitService> logger)
                         worktrees.Add(new WorktreeInfo(currentBranch, currentPath, IsCurrent: false, IsPrimary: isPrimary));
                     }
 
-                    currentPath = line.Substring("worktree ".Length).Trim();
+                    currentPath = line["worktree ".Length..].Trim();
                     currentBranch = null;
                     isPrimary = false;
                 }
                 else if (line.StartsWith("branch "))
                 {
-                    var branchRef = line.Substring("branch ".Length).Trim();
+                    var branchRef = line["branch ".Length..].Trim();
                     currentBranch = branchRef.Replace("refs/heads/", "");
                 }
                 else if (line.StartsWith("bare"))
@@ -242,6 +242,28 @@ public class GitService(ILogger<GitService> logger)
         {
             logger.LogError(ex, "Failed to get current branch");
             return null;
+        }
+    }
+
+    public (bool IsGitHubRepo, string RemoteName) IsGitHubRepo(string repoPath)
+    {
+        try
+        {
+            using var repo = new Repository(repoPath);
+            foreach (var remote in repo.Network.Remotes)
+            {
+                var url = remote.Url;
+                if (url.Contains("github.com", StringComparison.OrdinalIgnoreCase))
+                {
+                    return (true, remote.Name);
+                }
+            }
+            return (false, string.Empty);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Failed to check if repository is GitHub repo");
+            return (false, string.Empty);
         }
     }
 
