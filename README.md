@@ -1,60 +1,88 @@
-# hyprwt
+# hyprwt 🚀
 
-Customizable git worktree manager written in .NET.
+> **A better git worktree experience**
 
-## CI/CD Pipeline
+`hyprwt` is a modern, highly customizable CLI tool that supercharges your git worktree workflow. It makes creating, switching, and managing worktrees effortless, with first-class terminal integration and powerful automation hooks.
 
-This project uses GitHub Actions for automated CI/CD:
+## Why `hyprwt`?
 
-### Continuous Integration (CI)
-- **Trigger**: Push to `main` branch or pull requests
-- **Platforms**: Ubuntu, Windows, macOS
-- **Actions**:
-  - Restore dependencies
-  - Build project
-  - Run tests
+Git worktrees are amazing for parallel development, but managing them manually is tedious. `hyprwt` solves this:
 
-### Continuous Deployment (CD)
-- **Trigger**: Push of version tags (`v*`)
-- **Actions**:
-  - Build binaries for multiple platforms (Linux x64, Windows x64, macOS x64, macOS ARM64)
-  - Create NuGet package for dotnet tool
-  - Create GitHub release with binaries and changelog
-  - Publish to NuGet.org
+*   **⚡ Instant Context Switching**: `hyprwt feature-branch` handles everything—fetching, creating the worktree, and opening it.
+*   **🖥️ Terminal Integrated**: Automatically opens your worktree in a new tab or window (supports iTerm2, Tmux, Ghostty, VS Code, and more).
+*   **✨ Interactive TUI**: built-in interactive menu for selecting and managing worktrees.
+*   **🧹 Smart Cleanup**: `hyprwt cleanup` intelligently finds and deletes worktrees for merged or closed branches (including GitHub integration).
+*   **🔗 Lifecycle Hooks**: Run scripts automatically on create, switch, or cleanup (e.g., `bun install` or copying `.env` files).
 
-### Release Management
-- Uses [release-drafter](https://github.com/release-drafter/release-drafter) for automatic changelog generation
-- Labels PRs with appropriate categories (feature, bug, docs, etc.) to generate meaningful changelogs
+## 📦 Installation
 
-### Package Managers
-Templates for publishing to various package managers are available in the `packages/` directory:
-- **winget**: Windows Package Manager
-- **scoop**: Windows command-line installer
-- **brew**: macOS Homebrew
-- **AUR**: Arch Linux User Repository
+### Package Managers (Recommended)
 
-## Development
+Support for various package managers is available:
 
-### Prerequisites
+*   **Homebrew (macOS)**: `brew install hyprwt`
+*   **Winget (Windows)**: `winget install hyprwt`
+*   **Scoop (Windows)**: `scoop install hyprwt`
+*   **AUR (Arch Linux)**: `yay -S hyprwt`
+
+### .NET Tool (Alternative)
+
+```bash
+dotnet tool install --global hyprwt
+```
+
+## ⚡ Usage
+
+### Create & Switch
+Create a new worktree for a feature branch and open it instantly in a new tab:
+
+```bash
+# Creates a worktree for 'my-feature' and opens it
+hyprwt my-feature
+```
+
+### Cleanup
+Clean up old worktrees. `hyprwt` checks if branches are merged or if their PRs are closed.
+
+```bash
+hyprwt cleanup
+```
+
+## 🛠️ Configuration
+
+`hyprwt` is highly configurable via a global or project-local `hyprwt.json` file.
+
+**Example `hyprwt.json`:**
+
+```json
+{
+  "worktree": {
+    "directoryPattern": "../{repo_name}-worktrees/{branch}"
+  },
+  "terminal": {
+    "mode": "tab"
+  },
+  "scripts": {
+    "sessionInit": "bun install && cp ../main/.env ."
+  }
+}
+```
+
+See [example_config.json](example_config.json) for a comprehensive list of options.
+
+## 🏗️ Development
+
+**Prerequisites:**
 - .NET 10.0 SDK
-- mise (for dependency management)
 
-### Setup
+**Build & Run:**
 ```bash
+# Setup dependencies
 ./setup.sh
-```
 
-### Build
-```bash
+# Build
 dotnet build
-```
 
-### Test
-```bash
+# Run tests
 dotnet test
-```
-
-### Publish locally
-```bash
-dotnet publish src/hyprwt.csproj --runtime linux-x64 --self-contained
 ```

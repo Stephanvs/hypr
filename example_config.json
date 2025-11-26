@@ -28,6 +28,6 @@
   },
   "confirmations": {
     "cleanupMultiple": true,
-    "forceOperations": true
+    "forceOperations": false
   }
 }
