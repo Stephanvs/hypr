@@ -43,18 +43,18 @@ hyprwt config
 **Example config**
 ```json
 {
-    "Terminal": {
+    "terminal": {
       "Mode": "tab",
       "AlwaysNew": false
     },
-    "Worktree": {
+    "worktree": {
       "DirectoryPattern": "../{repo_name}-worktrees/{branch}",
       "AutoFetch": true
     },
-    "Cleanup": {
+    "cleanup": {
       "DefaultMode": "interactive"
     },
-    "Scripts": {
+    "scripts": {
       "SessionInit": "source .env",
       "PostCreate": "npm install"
     }
