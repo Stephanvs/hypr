@@ -100,7 +100,7 @@ public class CleanupCommand : Command
                 return 0;
             }
 
-            var toRemove = await FilterWorktreesAsync(repoPath, candidates, cleanMode);
+            var toRemove = await FilterWorktreesAsync(repoPath, candidates, cleanMode, force);
 
             if (toRemove.Count == 0)
             {
@@ -168,17 +168,38 @@ public class CleanupCommand : Command
     private async Task<List<WorktreeInfo>> FilterWorktreesAsync(
         string repoPath,
         List<WorktreeInfo> worktrees,
-        CleanupMode? mode)
+        CleanupMode? mode,
+        bool force)
     {
         return mode switch
         {
-            null or Configuration.CleanupMode.All => worktrees,
-            Configuration.CleanupMode.Remoteless => FilterRemoteless(repoPath, worktrees),
-            Configuration.CleanupMode.Merged => FilterMerged(repoPath, worktrees),
-            Configuration.CleanupMode.GitHub => await FilterGitHubAsync(repoPath, worktrees),
-            Configuration.CleanupMode.Interactive => FilterInteractive(worktrees),
+            null or Configuration.CleanupMode.All => FilterUncommittedChanges(worktrees, force),
+            Configuration.CleanupMode.Remoteless => FilterUncommittedChanges(FilterRemoteless(repoPath, worktrees), force),
+            Configuration.CleanupMode.Merged => FilterUncommittedChanges(FilterMerged(repoPath, worktrees), force),
+            Configuration.CleanupMode.GitHub => FilterUncommittedChanges(await FilterGitHubAsync(repoPath, worktrees), force),
+            Configuration.CleanupMode.Interactive => FilterUncommittedChanges(FilterInteractive(worktrees), force),
             _ => []
         };
+    }
+
+    private List<WorktreeInfo> FilterUncommittedChanges(List<WorktreeInfo> worktrees, bool force)
+    {
+        if (force)
+            return worktrees;
+
+        var result = new List<WorktreeInfo>();
+        foreach (var wt in worktrees)
+        {
+            if (!_gitService.HasUncommittedChanges(wt.Path))
+            {
+                result.Add(wt);
+            }
+            else
+            {
+                AnsiConsole.MarkupLine($"  [dim]Skipping {wt.Branch} - has uncommitted changes[/]");
+            }
+        }
+        return result;
     }
 
     private List<WorktreeInfo> FilterRemoteless(string repoPath, List<WorktreeInfo> worktrees)
