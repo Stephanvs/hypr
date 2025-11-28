@@ -54,7 +54,7 @@ public class CleanupCommand : Command
         Add(CleanupMode);
         Add(DryRun);
         Add(Force);
-        Add(new AutoConfirmOption());
+        Add(AutoConfirmOption);
 
         SetAction(ExecuteAsync);
     }
@@ -70,15 +70,17 @@ public class CleanupCommand : Command
     private Option<bool> Force { get; } = new("--force")
     {
         Aliases = { "-f" },
-        Description = "Force removal of non-empty worktrees"
+        Description = "Force removal of worktrees and branches even with uncommitted/unpushed changes"
     };
+
+    private AutoConfirmOption AutoConfirmOption { get; } = new();
 
     private async Task<int> ExecuteAsync(ParseResult ctx)
     {
         var cleanMode = ctx.GetValue(CleanupMode);
         var dryRun = ctx.GetValue(DryRun);
         var force = ctx.GetValue(Force);
-        var autoConfirm = ctx.GetValue(new AutoConfirmOption());
+        var autoConfirm = ctx.GetValue(AutoConfirmOption);
 
         try
         {
@@ -140,6 +142,7 @@ public class CleanupCommand : Command
             }
 
             var removed = 0;
+            var branchesDeleted = 0;
             foreach (var wt in toRemove)
             {
                 AnsiConsole.MarkupLine($"Removing [cyan]{wt.Branch}[/]...");
@@ -147,6 +150,20 @@ public class CleanupCommand : Command
                 {
                     AnsiConsole.MarkupLine($"  [green]✓[/] Removed {wt.Branch}");
                     removed++;
+
+                    // Delete local branch after worktree removal
+                    if (_gitService.BranchExistsLocally(repoPath, wt.Branch))
+                    {
+                        if (_gitService.DeleteBranch(repoPath, wt.Branch, force))
+                        {
+                            AnsiConsole.MarkupLine($"  [green]✓[/] Deleted local branch {wt.Branch}");
+                            branchesDeleted++;
+                        }
+                        else
+                        {
+                            AnsiConsole.MarkupLine($"  [yellow]![/] Could not delete branch {wt.Branch} (may have unmerged changes)");
+                        }
+                    }
                 }
                 else
                 {
@@ -154,7 +171,12 @@ public class CleanupCommand : Command
                 }
             }
 
-            AnsiConsole.MarkupLine($"\n[green]Removed {removed} of {toRemove.Count} worktree(s)[/]");
+            var summary = $"Removed {removed} of {toRemove.Count} worktree(s)";
+            if (branchesDeleted > 0)
+            {
+                summary += $", deleted {branchesDeleted} local branch(es)";
+            }
+            AnsiConsole.MarkupLine($"\n[green]{summary}[/]");
             return 0;
         }
         catch (Exception ex)
@@ -174,10 +196,10 @@ public class CleanupCommand : Command
         return mode switch
         {
             null or Configuration.CleanupMode.All => FilterUncommittedChanges(worktrees, force),
-            Configuration.CleanupMode.Remoteless => FilterUncommittedChanges(FilterRemoteless(repoPath, worktrees), force),
-            Configuration.CleanupMode.Merged => FilterUncommittedChanges(FilterMerged(repoPath, worktrees), force),
+            Configuration.CleanupMode.Remoteless => FilterUncommittedChanges(FilterRemoteless(repoPath, worktrees, force), force),
+            Configuration.CleanupMode.Merged => FilterUncommittedChanges(FilterMerged(repoPath, worktrees, force), force),
             Configuration.CleanupMode.GitHub => FilterUncommittedChanges(await FilterGitHubAsync(repoPath, worktrees), force),
-            Configuration.CleanupMode.Interactive => FilterUncommittedChanges(FilterInteractive(worktrees), force),
+            Configuration.CleanupMode.Interactive => FilterUncommittedChanges(FilterInteractive(worktrees, force), force),
             _ => []
         };
     }
@@ -202,14 +224,20 @@ public class CleanupCommand : Command
         return result;
     }
 
-    private List<WorktreeInfo> FilterRemoteless(string repoPath, List<WorktreeInfo> worktrees)
+    private List<WorktreeInfo> FilterRemoteless(string repoPath, List<WorktreeInfo> worktrees, bool force)
     {
         var result = new List<WorktreeInfo>();
 
         foreach (var wt in worktrees)
         {
             var status = _gitService.GetBranchStatus(repoPath, wt);
-            if (!status.HasRemote)
+
+            // Safe to remove if no remote AND no uncommitted/unpushed changes
+            var isSafeToRemove = !status.HasRemote &&
+                                 (!status.HasUncommittedChanges && !status.HasUnpushedCommits);
+
+            // Include if safe OR if force mode enabled
+            if (isSafeToRemove || force)
             {
                 result.Add(wt);
             }
@@ -218,14 +246,20 @@ public class CleanupCommand : Command
         return result;
     }
 
-    private List<WorktreeInfo> FilterMerged(string repoPath, List<WorktreeInfo> worktrees)
+    private List<WorktreeInfo> FilterMerged(string repoPath, List<WorktreeInfo> worktrees, bool force)
     {
         var result = new List<WorktreeInfo>();
 
         foreach (var wt in worktrees)
         {
             var status = _gitService.GetBranchStatus(repoPath, wt);
-            if (status.IsMerged || status.IsIdentical)
+
+            // Safe to remove if merged/identical AND no uncommitted/unpushed changes
+            var isSafeToRemove = (status.IsMerged || status.IsIdentical) &&
+                                 (!status.HasUncommittedChanges && !status.HasUnpushedCommits);
+
+            // Include if safe OR if force mode enabled
+            if (isSafeToRemove || force)
             {
                 result.Add(wt);
             }
@@ -284,7 +318,7 @@ public class CleanupCommand : Command
         return result;
     }
 
-    private static List<WorktreeInfo> FilterInteractive(List<WorktreeInfo> worktrees)
+    private static List<WorktreeInfo> FilterInteractive(List<WorktreeInfo> worktrees, bool force)
     {
         // TODO: Implement interactive TUI selection
         // For now, let user confirm all

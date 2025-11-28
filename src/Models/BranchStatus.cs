@@ -9,11 +9,13 @@ namespace Hyprwt.Models;
 /// <param name="IsIdentical">True if branch has no unique commits vs main.</param>
 /// <param name="Path">The worktree path.</param>
 /// <param name="HasUncommittedChanges">Whether there are uncommitted changes.</param>
+/// <param name="HasUnpushedCommits">Whether there are commits not pushed to remote.</param>
 public record BranchStatus(
     string Branch,
     bool HasRemote,
     bool IsMerged,
     bool IsIdentical,
     string Path,
-    bool HasUncommittedChanges = false
+    bool HasUncommittedChanges = false,
+    bool HasUnpushedCommits = false
 );

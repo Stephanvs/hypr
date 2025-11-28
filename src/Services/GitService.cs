@@ -225,6 +225,42 @@ public class GitService(ILogger<GitService> logger)
     }
 
     /// <summary>
+    /// Deletes a local branch.
+    /// </summary>
+    /// <param name="repoPath">Repository path.</param>
+    /// <param name="branchName">Branch name to delete.</param>
+    /// <param name="force">Force deletion even if not fully merged.</param>
+    /// <returns>True if successful.</returns>
+    public bool DeleteBranch(string repoPath, string branchName, bool force = false)
+    {
+        try
+        {
+            var args = new List<string> { "branch" };
+            if (force)
+                args.Add("-D"); // Force delete
+            else
+                args.Add("-d"); // Safe delete (only if merged)
+            
+            args.Add(branchName);
+
+            var result = RunGitCommand(repoPath, args.ToArray());
+            if (result.ExitCode == 0)
+            {
+                logger.LogInformation("Deleted local branch {Branch}", branchName);
+                return true;
+            }
+
+            logger.LogError("Failed to delete branch {Branch}: {Error}", branchName, result.Error);
+            return false;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Exception deleting branch {Branch}", branchName);
+            return false;
+        }
+    }
+
+    /// <summary>
     /// Gets the current branch name.
     /// </summary>
     /// <param name="repoPath">Repository path.</param>
@@ -403,6 +439,13 @@ public class GitService(ILogger<GitService> logger)
             var hasRemote = branch.TrackedBranch != null;
             var hasUncommitted = HasUncommittedChanges(worktree.Path);
 
+            // Check if branch has unpushed commits
+            var hasUnpushedCommits = false;
+            if (hasRemote && branch.TrackingDetails != null)
+            {
+                hasUnpushedCommits = branch.TrackingDetails.AheadBy > 0;
+            }
+
             // Check if merged
             var defaultBranch = GetDefaultBranch(repoPath);
             var isMerged = false;
@@ -434,7 +477,8 @@ public class GitService(ILogger<GitService> logger)
                 isMerged,
                 isIdentical,
                 worktree.Path,
-                hasUncommitted
+                hasUncommitted,
+                hasUnpushedCommits
             );
         }
         catch (Exception ex)
@@ -446,7 +490,8 @@ public class GitService(ILogger<GitService> logger)
                 IsMerged: false,
                 IsIdentical: false,
                 worktree.Path,
-                HasUncommittedChanges: false
+                HasUncommittedChanges: false,
+                HasUnpushedCommits: false
             );
         }
     }
