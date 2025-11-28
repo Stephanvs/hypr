@@ -8,7 +8,7 @@ public class TerminalConfig
     /// <summary>
     /// Terminal mode (tab/window/inplace/echo/vscode/cursor).
     /// </summary>
-    public TerminalMode Mode { get; set; } = TerminalMode.Tab;
+    public TerminalMode Mode { get; set; } = TerminalMode.Window;
 
     /// <summary>
     /// Always create new session.
