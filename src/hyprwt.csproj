@@ -7,7 +7,6 @@
 
      <!-- Assembly Info -->
      <AssemblyName>hyprwt</AssemblyName>
-     <Version>0.1.0</Version>
      <Authors>Stephan van Stekelenburg</Authors>
      <Description>Customizable git worktree manager</Description>
      <Copyright>Copyright © 2025</Copyright>

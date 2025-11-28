@@ -31,6 +31,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get version from tag
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      shell: bash
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -40,14 +46,14 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+    - name: Build with version from tag
+      run: dotnet build src/hyprwt.csproj --configuration Release --no-restore -p:Version=${{ env.VERSION }}
 
     - name: Test
       run: dotnet test --no-restore --verbosity normal
 
-    - name: Publish binary
-      run: dotnet publish src/hyprwt.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.name }}
+    - name: Publish binary with version
+      run: dotnet publish src/hyprwt.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.name }} -p:Version=${{ env.VERSION }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -60,6 +66,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get version from tag
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      shell: bash
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
@@ -69,8 +81,8 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Pack dotnet tool
-      run: dotnet pack src/hyprwt.csproj --configuration Release --output ./nupkg
+    - name: Pack dotnet tool with version from tag
+      run: dotnet pack src/hyprwt.csproj --configuration Release --output ./nupkg -p:Version=${{ env.VERSION }}
 
     - name: Upload dotnet tool package
       uses: actions/upload-artifact@v4
@@ -84,6 +96,12 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Get version from tag
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      shell: bash
 
     - name: Download all artifacts
       uses: actions/download-artifact@v4
@@ -102,6 +120,8 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
+        tag_name: v${{ env.VERSION }}
+        name: Release v${{ env.VERSION }}
         files: |
           artifacts/*.tar.gz
           artifacts/dotnet-tool/*.nupkg
