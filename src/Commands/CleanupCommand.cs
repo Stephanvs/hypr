@@ -196,10 +196,10 @@ public class CleanupCommand : Command
         return mode switch
         {
             null or Configuration.CleanupMode.All => FilterUncommittedChanges(worktrees, force),
-            Configuration.CleanupMode.Remoteless => FilterUncommittedChanges(FilterRemoteless(repoPath, worktrees, force), force),
-            Configuration.CleanupMode.Merged => FilterUncommittedChanges(FilterMerged(repoPath, worktrees, force), force),
+            Configuration.CleanupMode.Remoteless => FilterUncommittedChanges(FilterRemoteless(repoPath, worktrees), force),
+            Configuration.CleanupMode.Merged => FilterUncommittedChanges(FilterMerged(repoPath, worktrees), force),
             Configuration.CleanupMode.GitHub => FilterUncommittedChanges(await FilterGitHubAsync(repoPath, worktrees), force),
-            Configuration.CleanupMode.Interactive => FilterUncommittedChanges(FilterInteractive(worktrees, force), force),
+            Configuration.CleanupMode.Interactive => FilterUncommittedChanges(FilterInteractive(worktrees), force),
             _ => []
         };
     }
@@ -224,7 +224,7 @@ public class CleanupCommand : Command
         return result;
     }
 
-    private List<WorktreeInfo> FilterRemoteless(string repoPath, List<WorktreeInfo> worktrees, bool force)
+    private List<WorktreeInfo> FilterRemoteless(string repoPath, List<WorktreeInfo> worktrees)
     {
         var result = new List<WorktreeInfo>();
 
@@ -236,8 +236,7 @@ public class CleanupCommand : Command
             var isSafeToRemove = !status.HasRemote &&
                                  (!status.HasUncommittedChanges && !status.HasUnpushedCommits);
 
-            // Include if safe OR if force mode enabled
-            if (isSafeToRemove || force)
+            if (isSafeToRemove)
             {
                 result.Add(wt);
             }
@@ -246,7 +245,7 @@ public class CleanupCommand : Command
         return result;
     }
 
-    private List<WorktreeInfo> FilterMerged(string repoPath, List<WorktreeInfo> worktrees, bool force)
+    private List<WorktreeInfo> FilterMerged(string repoPath, List<WorktreeInfo> worktrees)
     {
         var result = new List<WorktreeInfo>();
 
@@ -258,8 +257,7 @@ public class CleanupCommand : Command
             var isSafeToRemove = (status.IsMerged || status.IsIdentical) &&
                                  (!status.HasUncommittedChanges && !status.HasUnpushedCommits);
 
-            // Include if safe OR if force mode enabled
-            if (isSafeToRemove || force)
+            if (isSafeToRemove)
             {
                 result.Add(wt);
             }
@@ -318,7 +316,7 @@ public class CleanupCommand : Command
         return result;
     }
 
-    private static List<WorktreeInfo> FilterInteractive(List<WorktreeInfo> worktrees, bool force)
+    private static List<WorktreeInfo> FilterInteractive(List<WorktreeInfo> worktrees)
     {
         // TODO: Implement interactive TUI selection
         // For now, let user confirm all
