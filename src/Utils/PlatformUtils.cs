@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Hyprwt.Utils;
+namespace Hypr.Utils;
 
 /// <summary>
 /// Platform-specific utilities for cross-platform support.

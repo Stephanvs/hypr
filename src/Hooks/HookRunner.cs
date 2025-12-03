@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace Hyprwt.Hooks;
+namespace Hypr.Hooks;
 
 /// <summary>
 /// Runs lifecycle hooks and custom scripts.

@@ -1,10 +1,10 @@
 # CLI reference
 
-This page provides a comprehensive reference for all `hyprwt` commands, their options, and usage patterns. For a hands-on introduction, check out the [Getting Started](gettingstarted.md) guide.
+This page provides a comprehensive reference for all `hypr` commands, their options, and usage patterns. For a hands-on introduction, check out the [Getting Started](gettingstarted.md) guide.
 
-## `hyprwt <branch-name>` / `hyprwt switch`
+## `hypr <branch-name>` / `hypr switch`
 
-_(Aliases: `hyprwt switch <branch-name>`, `hyprwt sw <branch-name>`, `hyprwt checkout <branch-name>`, `hyprwt co <branch-name>`, `hyprwt goto <branch-name>`, `hyprwt go <branch-name>`)_
+_(Aliases: `hypr switch <branch-name>`, `hypr sw <branch-name>`, `hypr checkout <branch-name>`, `hypr co <branch-name>`, `hypr goto <branch-name>`, `hypr go <branch-name>`)_
 
 Switch to a worktree, or create a new one. Accepts:
 
@@ -14,17 +14,17 @@ Switch to a worktree, or create a new one. Accepts:
 
 Intelligently checks out existing branches from your default remote (i.e. `origin`), or offers to create a new one if none exists.
 
-**Interactive Mode**: Running `hyprwt switch` with no arguments opens an interactive TUI.
+**Interactive Mode**: Running `hypr switch` with no arguments opens an interactive TUI.
 
-The `hyprwt <branch-name>` form is a convenient shortcut. Use the explicit `switch` command if your branch name conflicts with another `hyprwt` command (e.g., `hyprwt switch cleanup`).
+The `hypr <branch-name>` form is a convenient shortcut. Use the explicit `switch` command if your branch name conflicts with another `hypr` command (e.g., `hypr switch cleanup`).
 
-<div class="hyprwt-clitable-wrapper"></div>
+<div class="hypr-clitable-wrapper"></div>
 
 | Option                     | Description                                                                                                                                                                |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--terminal <mode>`        | Overrides the default terminal behavior. Modes include `tab`, `window`, `inplace`, `echo`, `vscode`, and `cursor`. See [Terminal Support](terminalsupport.md) for details. |
 | `--after-init <script>`    | Runs a command _after_ the `session_init` script completes. Perfect for starting a dev server.                                                                             |
-| `--ignore-same-session`    | Forces `hyprwt` to create a new terminal, even if a session for that worktree already exists.                                                                              |
+| `--ignore-same-session`    | Forces `hypr` to create a new terminal, even if a session for that worktree already exists.                                                                              |
 | `--from <branch>`          | Source branch/commit to create worktree from. Accepts any git revision: branch names, tags, commit hashes, `HEAD`, etc. Only used when creating new worktrees.             |
 | `--dir <path>`             | Directory path for the new worktree. Overrides the configured directory pattern. Supports both absolute and relative paths.                                                |
 | `--custom-script <script>` | Runs a named custom script with arguments. Scripts are defined in your configuration file. Example: `--custom-script="bugfix 123"`.                                        |
@@ -32,7 +32,7 @@ The `hyprwt <branch-name>` form is a convenient shortcut. Use the explicit `swit
 
 ### Branch resolution
 
-When creating a new worktree, `hyprwt` automatically:
+When creating a new worktree, `hypr` automatically:
 
 1. Fetches the latest branches from your remote
 2. Checks if the branch exists locally - if so, uses it
@@ -47,16 +47,16 @@ Branch names are sanitized for the filesystem - slashes become hyphens. For exam
 
 You can customize this with the `directory_pattern` setting (see [Configuration](configuration.md)), which supports template variables like `{repo_name}`, `{branch}`, `{repo_parent_dir}`, and environment variables. For example, to organize all worktrees in a central location: `~/.worktrees/{repo_name}/{branch}`.
 
-## `hyprwt ls`
+## `hypr ls`
 
 _(Aliases: `list`, `ll`)_
 
-Lists all worktrees for the current project, indicating the main worktree, your current location, and any active terminal sessions. Running `hyprwt` with no arguments is equivalent to `hyprwt ls`.
+Lists all worktrees for the current project, indicating the main worktree, your current location, and any active terminal sessions. Running `hypr` with no arguments is equivalent to `hypr ls`.
 
 The @ symbol indicates that there is an active terminal session for a worktree.
 
 ```txt
-> hyprwt ls
+> hypr ls
 
   Worktrees:
 → ~/dev/my-project (main worktree)                         main ←
@@ -64,7 +64,7 @@ The @ symbol indicates that there is an active terminal session for a worktree.
   ~/dev/my-project-worktrees/hotfix-bug              hotfix-bug
 ```
 
-## `hyprwt cleanup [WORKTREES...]`
+## `hypr cleanup [WORKTREES...]`
 
 _(Aliases: `cl`, `clean`, `prune`, `rm`, `remove`, `del`, `delete`)_
 
@@ -72,23 +72,23 @@ Safely removes worktrees, their directories, and associated local git branches. 
 
 You can optionally specify one or more worktrees to remove by passing:
 
-- Branch names (e.g., `hyprwt cleanup feature-branch`)
+- Branch names (e.g., `hypr cleanup feature-branch`)
 - Branch names without prefix (if you've configured `branch_prefix`)
-- Paths to worktree directories (e.g., `hyprwt cleanup ../my-project-worktrees/feature-branch`)
+- Paths to worktree directories (e.g., `hypr cleanup ../my-project-worktrees/feature-branch`)
 
 When worktrees are specified, the command skips the interactive TUI and mode-based selection, and instead prompts for simple yes/no confirmation.
 
-<div class="hyprwt-clitable-wrapper"></div>
+<div class="hypr-clitable-wrapper"></div>
 
 | Option          | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--mode <mode>` | Sets the cleanup mode. Ignored when specific worktrees are provided. If not specified in a non-interactive environment (like CI), the command will exit. <br> • `interactive`: Opens a TUI to let you choose what to remove. <br> • `all`: Non-interactively selects all merged and remoteless branches. <br> • `merged`: Selects branches that have been merged into your main branch. <br> • `remoteless`: Selects local branches that don't have an upstream remote. <br> • `github`: Uses the GitHub CLI (`gh`) to identify branches with merged or closed pull requests. Requires `gh` to be installed. <br><br> **First-run behavior**: If you haven't configured a preferred cleanup mode, hyprwt will prompt you to select one on first use. Your selection is saved for future use. |
+| `--mode <mode>` | Sets the cleanup mode. Ignored when specific worktrees are provided. If not specified in a non-interactive environment (like CI), the command will exit. <br> • `interactive`: Opens a TUI to let you choose what to remove. <br> • `all`: Non-interactively selects all merged and remoteless branches. <br> • `merged`: Selects branches that have been merged into your main branch. <br> • `remoteless`: Selects local branches that don't have an upstream remote. <br> • `github`: Uses the GitHub CLI (`gh`) to identify branches with merged or closed pull requests. Requires `gh` to be installed. <br><br> **First-run behavior**: If you haven't configured a preferred cleanup mode, hypr will prompt you to select one on first use. Your selection is saved for future use. |
 | `--dry-run`     | Previews which worktrees and branches would be removed without actually deleting anything.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `--force`       | Force-removes worktrees even if they contain uncommitted changes or untracked files. Without this flag, git will refuse to remove worktrees that have any modified tracked files or untracked files (which is common - e.g., build artifacts, `.DS_Store`, etc.).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 
 ### How cleanup works
 
-When you run cleanup, `hyprwt`:
+When you run cleanup, `hypr`:
 
 1. Identifies worktrees matching the selected mode criteria
 2. Prompts for confirmation (shows list of worktrees to be removed)
@@ -99,13 +99,13 @@ When you run cleanup, `hyprwt`:
 
 Note: Worktrees with uncommitted changes are automatically skipped in non-interactive modes unless you use `--force`.
 
-## `hyprwt config`
+## `hypr config`
 
 _(Aliases: `configure`, `settings`, `cfg`, `conf`)_
 
-Opens an interactive TUI to configure global `hyprwt` settings, such as the default terminal mode. Learn more in the [Configuration](configuration.md) guide.
+Opens an interactive TUI to configure global `hypr` settings, such as the default terminal mode. Learn more in the [Configuration](configuration.md) guide.
 
-<div class="hyprwt-clitable-wrapper"></div>
+<div class="hypr-clitable-wrapper"></div>
 
 | Option   | Description                                                                                                            |
 | -------- | ---------------------------------------------------------------------------------------------------------------------- |
@@ -113,13 +113,13 @@ Opens an interactive TUI to configure global `hyprwt` settings, such as the defa
 
 ## Global options
 
-These options can be used with any `hyprwt` command.
+These options can be used with any `hypr` command.
 
-<div class="hyprwt-clitable-wrapper"></div>
+<div class="hypr-clitable-wrapper"></div>
 
 | Option         | Description                                                   |
 | -------------- | ------------------------------------------------------------- |
 | `-y`, `--yes`  | Automatically answers "yes" to all confirmation prompts.      |
 | `--debug`      | Enables verbose debug logging for troubleshooting.            |
-| `-h`, `--help` | Shows the help message for `hyprwt` or a specific subcommand. |
-| `--version`    | Shows the hyprwt version and exits.                           |
+| `-h`, `--help` | Shows the help message for `hypr` or a specific subcommand. |
+| `--version`    | Shows the hypr version and exits.                           |

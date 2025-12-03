@@ -1,10 +1,10 @@
-# hyprwt Configuration File
+# hypr Configuration File
 # 
-# This is a comprehensive example of all configuration options for hyprwt.
+# This is a comprehensive example of all configuration options for hypr.
 # Configuration is loaded from multiple sources in this order:
-#   1. Global config: ~/.config/hyprwt/config.toml (Linux) or ~/Library/Application Support/hyprwt/config.toml (macOS)
-#   2. Project config: hyprwt.toml or .hyprwt.toml in project root
-#   3. Environment variables: HYPRWT_* prefix
+#   1. Global config: ~/.config/hypr/config.toml (Linux) or ~/Library/Application Support/hypr/config.toml (macOS)
+#   2. Project config: hypr.toml or .hypr.toml in project root
+#   3. Environment variables: HYPR_* prefix
 #   4. Command line flags
 #
 # Later sources override earlier ones.
@@ -14,14 +14,14 @@
 # ============================================================================
 
 [terminal]
-# How hyprwt opens worktrees in your terminal
+# How hypr opens worktrees in your terminal
 # Options: "tab" (default), "window", "inplace", "echo"
 #   - tab: Open in a new tab
 #   - window: Open in a new window
 #   - inplace: Switch the current terminal to the worktree directory
 #   - echo: Output shell commands to stdout
 # CLI: --terminal=tab
-# ENV: HYPRWT_TERMINAL_MODE=tab
+# ENV: HYPR_TERMINAL_MODE=tab
 mode = "tab"
 
 # Always create a new terminal session instead of switching to existing ones
@@ -32,7 +32,7 @@ always_new = false
 
 # Force a specific terminal program instead of auto-detection
 # Leave commented to use auto-detection
-# ENV: HYPRWT_TERMINAL_PROGRAM=iterm2
+# ENV: HYPR_TERMINAL_PROGRAM=iterm2
 # program = "iterm2"  # Options: iterm2, terminal, tmux, gnome-terminal, konsole, etc.
 
 # ============================================================================
@@ -45,12 +45,12 @@ always_new = false
 # Default: "../{repo_name}-worktrees/{branch}"
 # Can also use environment variables: "$HOME/worktrees/{repo_name}/{branch}"
 # Example with repo_parent_dir: "{repo_parent_dir}/worktrees/{branch}"
-# ENV: HYPRWT_WORKTREE_DIRECTORY_PATTERN="../{repo_name}-worktrees/{branch}"
+# ENV: HYPR_WORKTREE_DIRECTORY_PATTERN="../{repo_name}-worktrees/{branch}"
 directory_pattern = "../{repo_name}-worktrees/{branch}"
 
 # Automatically fetch from remote before creating new worktrees
 # CLI: --no-fetch (to disable)
-# ENV: HYPRWT_WORKTREE_AUTO_FETCH=false
+# ENV: HYPR_WORKTREE_AUTO_FETCH=false
 auto_fetch = true
 
 # Automatically prefix new branch names with a template
@@ -58,9 +58,9 @@ auto_fetch = true
 # Examples:
 #   branch_prefix = "feature/"           # Simple prefix
 #   branch_prefix = "{github_username}/" # Use GitHub username
-# When set, "hyprwt my-feature" creates "feature/my-feature" or "alice/my-feature"
-# Also used when switching: "hyprwt my-feature" switches to "feature/my-feature" if it exists
-# ENV: HYPRWT_WORKTREE_BRANCH_PREFIX="feature/"
+# When set, "hypr my-feature" creates "feature/my-feature" or "alice/my-feature"
+# Also used when switching: "hypr my-feature" switches to "feature/my-feature" if it exists
+# ENV: HYPR_WORKTREE_BRANCH_PREFIX="feature/"
 # branch_prefix = "feature/"
 
 # ============================================================================
@@ -71,7 +71,7 @@ auto_fetch = true
 # Default mode for cleanup command
 # Options: "interactive" (default), "merged", "remoteless", "all"
 # CLI: --mode=merged
-# ENV: HYPRWT_CLEANUP_DEFAULT_MODE=merged
+# ENV: HYPR_CLEANUP_DEFAULT_MODE=merged
 default_mode = "interactive"
 
 # ============================================================================
@@ -81,13 +81,13 @@ default_mode = "interactive"
 [scripts]
 # Command to run after creating or switching to a worktree
 # CLI: --init="npm install" (maps to session_init)
-# ENV: HYPRWT_SCRIPTS_SESSION_INIT="npm install && npm run dev"
+# ENV: HYPR_SCRIPTS_SESSION_INIT="npm install && npm run dev"
 session_init = "echo 'Always run after creating a new worktree; copy env vars & install dependencies'"
 
 [scripts.custom]
 # Custom scripts for specialized worktree initialization
 # Runs AFTER the standard init script for specific workflows
-# CLI: hyprwt feature-branch --custom-script="bugfix"
+# CLI: hypr feature-branch --custom-script="bugfix"
 # Note: For one-time custom scripts, use --after-init="command" instead
 bugfix = 'claude "Fix the bug described in GitHub issue $1"' # arguments are passed to the script
 release = 'claude "/release"' # asks claude to run .claude/commands/release.md
@@ -103,5 +103,5 @@ release = 'claude "/release"' # asks claude to run .claude/commands/release.md
 # ENV: HYPRWT_CONFIRMATIONS_CLEANUP_MULTIPLE=false
 cleanup_multiple = true  # When cleaning up multiple worktrees
 
-# ENV: HYPRWT_CONFIRMATIONS_FORCE_OPERATIONS=false
+# ENV: HYPR_CONFIRMATIONS_FORCE_OPERATIONS=false
 force_operations = true  # When using --force flag

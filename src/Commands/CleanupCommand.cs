@@ -1,12 +1,12 @@
 using System.CommandLine;
-using Hyprwt.Configuration;
-using Hyprwt.Models;
-using Hyprwt.Services;
+using Hypr.Configuration;
+using Hypr.Models;
+using Hypr.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Spectre.Console;
 
-namespace Hyprwt.Commands;
+namespace Hypr.Commands;
 
 /// <summary>
 /// Cleans up worktrees based on various criteria.

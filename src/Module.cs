@@ -1,10 +1,10 @@
-using Hyprwt.Configuration;
-using Hyprwt.Hooks;
-using Hyprwt.Services;
+using Hypr.Configuration;
+using Hypr.Hooks;
+using Hypr.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace hyprwt;
+namespace hypr;
 
 internal static class Module
 {

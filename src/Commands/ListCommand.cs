@@ -1,9 +1,9 @@
 using System.CommandLine;
-using Hyprwt.Services;
+using Hypr.Services;
 using Microsoft.Extensions.Logging;
 using Spectre.Console;
 
-namespace Hyprwt.Commands;
+namespace Hypr.Commands;
 
 /// <summary>
 /// Lists all worktrees in the current repository.

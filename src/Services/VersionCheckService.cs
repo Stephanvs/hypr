@@ -2,7 +2,7 @@ using Microsoft.Extensions.Logging;
 using System.Reflection;
 using System.Text.Json;
 
-namespace Hyprwt.Services;
+namespace Hypr.Services;
 
 /// <summary>
 /// Checks for version updates from GitHub releases.
@@ -46,10 +46,10 @@ public class VersionCheckService
         try
         {
             using var client = new HttpClient();
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("hyprwt/1.0");
+            client.DefaultRequestHeaders.UserAgent.ParseAdd("hypr/1.0");
 
             var response = await client.GetStringAsync(
-                "https://api.github.com/repos/stephanvs/hyprwt/releases/latest");
+                "https://api.github.com/repos/stephanvs/hypr/releases/latest");
 
             var release = JsonSerializer.Deserialize(response, AppJsonSerializerContext.Default.GitHubRelease);
             if (release == null)
@@ -68,7 +68,7 @@ public class VersionCheckService
                     Current = _currentVersion,
                     Latest = latestVersion,
                     UpdateAvailable = true,
-                    ChangelogUrl = $"https://github.com/stephanvs/hyprwt/releases/tag/{release.tag_name}",
+                    ChangelogUrl = $"https://github.com/stephanvs/hypr/releases/tag/{release.tag_name}",
                     InstallCommand = DetectInstallCommand()
                 };
             }
@@ -87,9 +87,9 @@ public class VersionCheckService
     /// </summary>
     private string DetectInstallCommand()
     {
-        // TODO: Detect how hyprwt was installed (dotnet tool, manual, package manager, etc.)
+        // TODO: Detect how hypr was installed (dotnet tool, manual, package manager, etc.)
         // For now, return generic command
-        return "dotnet tool update -g hyprwt";
+        return "dotnet tool update -g hypr";
     }
 
     /// <summary>

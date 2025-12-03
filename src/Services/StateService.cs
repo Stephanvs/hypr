@@ -1,9 +1,9 @@
-using Hyprwt.Configuration;
-using Hyprwt.Utils;
+using Hypr.Configuration;
+using Hypr.Utils;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
-namespace Hyprwt.Services;
+namespace Hypr.Services;
 
 /// <summary>
 /// Manages application state and persistence.
@@ -36,10 +36,10 @@ public class StateService
         
         return Environment.OSVersion.Platform switch
         {
-            PlatformID.Win32NT => Path.Combine(appDataDir, "hyprwt"),
-            PlatformID.Unix => Path.Combine(appDataDir, ".config", "hyprwt"),
-            PlatformID.MacOSX => Path.Combine(appDataDir, "Library", "Application Support", "hyprwt"),
-            _ => Path.Combine(appDataDir, ".config", "hyprwt")
+            PlatformID.Win32NT => Path.Combine(appDataDir, "hypr"),
+            PlatformID.Unix => Path.Combine(appDataDir, ".config", "hypr"),
+            PlatformID.MacOSX => Path.Combine(appDataDir, "Library", "Application Support", "hypr"),
+            _ => Path.Combine(appDataDir, ".config", "hypr")
         };
     }
 

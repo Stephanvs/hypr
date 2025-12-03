@@ -1,4 +1,4 @@
-namespace Hyprwt.Configuration;
+namespace Hypr.Configuration;
 
 /// <summary>
 /// Configuration settings for worktree management.

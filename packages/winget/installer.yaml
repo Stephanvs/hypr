@@ -2,12 +2,12 @@
 # This needs to be generated with proper SHA256 and URLs
 # Use wingetcreate to generate proper manifests
 
-PackageIdentifier: Stephanvs.hyprwt
+PackageIdentifier: Stephanvs.hypr
 PackageVersion: 0.1.0
 InstallerType: zip
 Installers:
 - Architecture: x64
-  InstallerUrl: https://github.com/Stephanvs/hyprwt/releases/download/v0.1.0/hyprwt-windows-x64.tar.gz
+  InstallerUrl: https://github.com/Stephanvs/hypr/releases/download/v0.1.0/hypr-windows-x64.tar.gz
   InstallerSha256: TODO_REPLACE_WITH_ACTUAL_SHA256
 ManifestType: installer
 ManifestVersion: 1.5.0

@@ -1,10 +1,10 @@
-# hyprwt: a better git worktree experience
+# hypr: a better git worktree experience
 
 ## What are worktrees?
 
 [Worktrees](https://git-scm.com/docs/git-worktree) are a built-in feature of git, which are essentially free clones of a local git repo. History is shared and synced across all worktrees for a given repo. Creating a new worktree is cheap, and you can list all your worktrees with a single command. This makes them a great fit for doing work “in parallel,” or not worrying about having uncommitted changes before working on another branch.
 
-## How hyprwt simplifies common workflows
+## How hypr simplifies common workflows
 
 While worktrees are powerful, the built-in tooling is minimalistic. Consider what it takes to set up a fresh worktree in a typical workflow:
 
@@ -20,21 +20,21 @@ Congrats, you're done! Type type type, open a PR, and merge it. Now you need to 
 1. `git worktree rm .`
 2. Close the tab
 
-On the other hand, **with hyprwt, it looks like this:**
+On the other hand, **with hypr, it looks like this:**
 
 ```sh
-hyprwt <branch>
+hypr <branch>
 ```
 
 And deleting branches that have been merged or are associated with closed PRs looks like this:
 
 ```sh
-hyprwt cleanup
+hypr cleanup
 ```
 
 A lot nicer, right?
 
-## What hyprwt can do for you
+## What hypr can do for you
 
 <div class="grid cards" markdown>
 
@@ -42,25 +42,25 @@ A lot nicer, right?
 
     ---
 
-    It's not hard to learn the commands to manage worktrees, but hyprwt shortens the most common ones. And hyprwt integrates with your terminal program to automate opening new sessions. It supports everything [automate-terminal](https://github.com/irskep/automate-terminal), including iTerm2, tmux, Ghostty, and more.
+    It's not hard to learn the commands to manage worktrees, but hypr shortens the most common ones. And hypr integrates with your terminal program to automate opening new sessions. It supports everything [automate-terminal](https://github.com/irskep/automate-terminal), including iTerm2, tmux, Ghostty, and more.
 
 -   __Deep, customizable automation__
 
     ---
 
-    You can define scripts in `.hyprwt.toml` to run at various points, like after creating a worktree but before switching to it, or before a worktree is cleaned up. Check out [Lifecycle Hooks](./lifecyclehooks.md) for more information.
+    You can define scripts in `.hypr.toml` to run at various points, like after creating a worktree but before switching to it, or before a worktree is cleaned up. Check out [Lifecycle Hooks](./lifecyclehooks.md) for more information.
 
 -   __Smart cleanup__
 
     ---
 
-    You can configure hyprwt to automatically clean up worktrees whose branches have been merged, or even branches which are associated with closed pull requests on GitHub.
+    You can configure hypr to automatically clean up worktrees whose branches have been merged, or even branches which are associated with closed pull requests on GitHub.
 
   -   __Friendly TUIs__
 
       ---
 
-      hyprwt uses interactive terminal-based UIs where it makes sense. For example, `hyprwt config` gives you an easy way to edit global settings. `hyprwt switch` lets you review your worktrees and pick which one to navigate to.
+      hypr uses interactive terminal-based UIs where it makes sense. For example, `hypr config` gives you an easy way to edit global settings. `hypr switch` lets you review your worktrees and pick which one to navigate to.
 
 </div>
 
@@ -68,16 +68,16 @@ A lot nicer, right?
 
 You'll need Python 3.10+ and a version of `git` released less than ten years ago (2.5+).
 
-First, install hyprwt:
+First, install hypr:
 
 ```bash
-pip install hyprwt
+pip install hypr
 ```
 
 Then, make a new worktree for a new or existing branch in your current repo:
 
 ```bash
-hyprwt my-new-feature
+hypr my-new-feature
 ```
 
-Watch as `hyprwt` creates a new worktree and opens it in a new terminal tab or window.
+Watch as `hypr` creates a new worktree and opens it in a new terminal tab or window.

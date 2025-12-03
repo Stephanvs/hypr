@@ -1,4 +1,4 @@
-namespace Hyprwt.Models;
+namespace Hypr.Models;
 
 /// <summary>
 /// Information about a single worktree.
