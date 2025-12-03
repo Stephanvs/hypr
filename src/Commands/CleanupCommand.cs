@@ -5,6 +5,8 @@ using Hyprwt.Services;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Spectre.Console;
+using Spectre.Console.Rendering;
+using System.Text;
 
 namespace Hyprwt.Commands;
 
@@ -199,7 +201,7 @@ public class CleanupCommand : Command
             Configuration.CleanupMode.Remoteless => FilterUncommittedChanges(FilterRemoteless(repoPath, worktrees), force),
             Configuration.CleanupMode.Merged => FilterUncommittedChanges(FilterMerged(repoPath, worktrees), force),
             Configuration.CleanupMode.GitHub => FilterUncommittedChanges(await FilterGitHubAsync(repoPath, worktrees), force),
-            Configuration.CleanupMode.Interactive => FilterUncommittedChanges(FilterInteractive(worktrees), force),
+            Configuration.CleanupMode.Interactive => FilterUncommittedChanges(await FilterInteractiveAsync(worktrees), force),
             _ => []
         };
     }
@@ -316,11 +318,69 @@ public class CleanupCommand : Command
         return result;
     }
 
-    private static List<WorktreeInfo> FilterInteractive(List<WorktreeInfo> worktrees)
+    private async Task<List<WorktreeInfo>> FilterInteractiveAsync(List<WorktreeInfo> worktrees)
     {
-        // TODO: Implement interactive TUI selection
-        // For now, let user confirm all
-        AnsiConsole.MarkupLine("[yellow]Interactive mode not yet implemented, showing all candidates[/]");
-        return worktrees;
+        _logger.LogDebug("FilterInteractiveAsync entered with {Count} worktrees", worktrees.Count);
+        var repoPath = _gitService.FindRepoRoot();
+        if (repoPath == null)
+        {
+            _logger.LogDebug("FilterInteractiveAsync exiting early: not in a git repository");
+            AnsiConsole.MarkupLine("[red]Error:[/] Not in a git repository");
+            return [];
+        }
+
+        // Create worktree items with status for the selection prompt
+        var worktreeItems = worktrees.Select(wt =>
+        {
+            var status = _gitService.GetBranchStatus(repoPath, wt);
+            return new WorktreeSelectionItem(wt, status);
+        }).ToList();
+
+        var prompt = new MultiSelectionPrompt<WorktreeSelectionItem>()
+            .Title("Select worktrees to cleanup:")
+            .NotRequired()
+            .PageSize(15)
+            .MoreChoicesText("[grey](Move up and down to reveal more worktrees)[/]")
+            .InstructionsText(
+                "[grey](Press [blue]<space>[/] to toggle a worktree, " +
+                "[green]<enter>[/] to accept selected worktrees[/]");
+
+        // Add choices to the prompt
+        prompt.AddChoices(worktreeItems);
+        
+        // Use a converter to format the display
+        prompt.Converter = item =>
+        {
+            var statusText = GetStatusDisplay(item.Status);
+            return $"[cyan]{item.Worktree.Branch}[/] [dim]{item.Worktree.Path}[/] {statusText}";
+        };
+
+        var selected = AnsiConsole.Prompt(prompt);
+        var result = selected.Select(item => item.Worktree).ToList();
+        _logger.LogDebug("FilterInteractiveAsync exiting with {Count} selected worktrees", result.Count);
+
+        return result;
     }
+
+    private static string GetStatusDisplay(BranchStatus status)
+    {
+        var indicators = new List<string>();
+
+        if (status.HasUncommittedChanges)
+            indicators.Add("[red]![/]");
+        if (status.HasUnpushedCommits)
+            indicators.Add("[yellow]↑[/]");
+        if (status is { HasUncommittedChanges: false, HasUnpushedCommits: false })
+            indicators.Add("[green]✓[/]");
+
+        return indicators.Count > 0 ? $"[dim]{string.Join(" ", indicators)}[/]" : "";
+    }
+
+    /// <summary>
+    /// Helper class to hold worktree info with status for the selection prompt.
+    /// </summary>
+    private record WorktreeSelectionItem(
+        WorktreeInfo Worktree,
+        BranchStatus Status
+    );
 }
