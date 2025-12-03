@@ -1,4 +1,4 @@
 <Solution>
-  <Project Path="src/hyprwt.csproj" />
+  <Project Path="src/hypr.csproj" />
   <Project Path="tests/tests.csproj" />
 </Solution>

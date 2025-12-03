@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace Hyprwt.Configuration;
+namespace Hypr.Configuration;
 
 public static class PathProvider
 {
@@ -15,8 +15,8 @@ public static class PathProvider
         : Environment.SpecialFolder.UserProfile);
 
     var configDir = OperatingSystem.IsWindows()
-      ? Path.Combine(appDataDir, "hyprwt")
-      : Path.Combine(appDataDir, ".config", "hyprwt");
+      ? Path.Combine(appDataDir, "hypr")
+      : Path.Combine(appDataDir, ".config", "hypr");
 
     return Path.Combine(configDir, "config.json");
   }

@@ -1,4 +1,4 @@
-namespace Hyprwt.Models;
+namespace Hypr.Models;
 
 /// <summary>
 /// Status information for cleanup decisions.

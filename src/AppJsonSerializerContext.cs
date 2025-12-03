@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace Hyprwt.Services;
+namespace Hypr.Services;
 
 [JsonSourceGenerationOptions(
     WriteIndented = true,

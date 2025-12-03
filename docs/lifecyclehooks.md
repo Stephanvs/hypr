@@ -1,6 +1,6 @@
 # Lifecycle Hooks and Init Scripts
 
-`hyprwt` allows you to run custom commands at specific points during worktree operations. The motivating use cases are installing dependencies, copying secrets, and cleaning up resources.
+`hypr` allows you to run custom commands at specific points during worktree operations. The motivating use cases are installing dependencies, copying secrets, and cleaning up resources.
 
 ## Example: installing dependencies and copying secrets
 
@@ -8,10 +8,10 @@ The most common hook is the **`session_init` script**, which runs in your new te
 
 ### Configuration
 
-Set the `scripts.session_init` key in your `.hyprwt.toml` file:
+Set the `scripts.session_init` key in your `.hypr.toml` file:
 
 ```toml
-# .hyprwt.toml
+# .hypr.toml
 [scripts]
 session_init = "npm install"
 ```
@@ -20,10 +20,10 @@ session_init = "npm install"
 
 Worktrees start as clean checkouts, which means untracked files like `.env` are not automatically carried over. You can use an init script to copy these files from your main worktree.
 
-hyprwt provides environment variables that make this easier, including `AUTOWT_MAIN_REPO_DIR` which points to the main repository directory.
+hypr provides environment variables that make this easier, including `AUTOWT_MAIN_REPO_DIR` which points to the main repository directory.
 
 ```toml
-# .hyprwt.toml
+# .hypr.toml
 [scripts]
 # Copy .env file from main worktree if it exists
 session_init = """
@@ -39,7 +39,7 @@ fi
 If your dependency installation step takes a long time, you might wish to do all this in `post_create_async` instead of `session_init`. That way, you can get an interactive terminal without waiting for everything to get set up.
 
 ```toml
-# .hyprwt.toml
+# .hypr.toml
 [scripts]
 post_create_async = """
 npm install
@@ -51,9 +51,9 @@ fi
 
 ## Reference tables and diagrams
 
-Beyond `session_init` scripts, hyprwt supports 8 lifecycle hooks that run at specific points during worktree operations:
+Beyond `session_init` scripts, hypr supports 8 lifecycle hooks that run at specific points during worktree operations:
 
-<div class="hyprwt-hooks-wrapper"></div>
+<div class="hypr-hooks-wrapper"></div>
 
 | Hook | When it runs | Execution Context |
 | - | - | - |
@@ -73,18 +73,18 @@ Note that there is a command-line-only `--after-init` flag to run additional com
 ```mermaid
 sequenceDiagram
     actor User
-    participant hyprwt as hyprwt in<br>orig. terminal
+    participant hypr as hypr in<br>orig. terminal
     participant Terminal as New terminal
 
-    User->>hyprwt: hyprwt switch feature-branch
-    hyprwt->>hyprwt: pre_create hook (can abort)
-    hyprwt->>hyprwt: Create git worktree
-    hyprwt->>hyprwt: post_create hook
-    hyprwt->>Terminal: Open
+    User->>hypr: hypr switch feature-branch
+    hypr->>hypr: pre_create hook (can abort)
+    hypr->>hypr: Create git worktree
+    hypr->>hypr: post_create hook
+    hypr->>Terminal: Open
     Terminal->>Terminal: cd to new worktree
     Terminal->>Terminal: session_init and --after-init
     Terminal-->>User: Ready
-    hyprwt->>hyprwt: post_create_async hook
+    hypr->>hypr: post_create_async hook
 ```
 
 ### Switching between existing worktrees
@@ -92,15 +92,15 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor User
-    participant hyprwt as hyprwt in<br>orig. terminal
+    participant hypr as hypr in<br>orig. terminal
     participant Terminal as New terminal
 
-    User->>hyprwt: hyprwt switch other-branch
-    hyprwt->>hyprwt: pre_switch hook
-    hyprwt->>Terminal: Open/switch to
+    User->>hypr: hypr switch other-branch
+    hypr->>hypr: pre_switch hook
+    hypr->>Terminal: Open/switch to
     Terminal->>Terminal: cd to worktree
     Terminal-->>User: Ready
-    hyprwt->>hyprwt: post_switch hook
+    hypr->>hypr: post_switch hook
 ```
 
 ### Worktree cleanup
@@ -108,13 +108,13 @@ sequenceDiagram
 ```mermaid
 sequenceDiagram
     actor User
-    participant hyprwt
+    participant hypr
 
-    User->>hyprwt: hyprwt cleanup
-    hyprwt->>hyprwt: pre_cleanup hook
-    hyprwt->>hyprwt: Remove worktrees and branches
-    hyprwt->>hyprwt: post_cleanup hook
-    hyprwt-->>User: Cleanup complete
+    User->>hypr: hypr cleanup
+    hypr->>hypr: pre_cleanup hook
+    hypr->>hypr: Remove worktrees and branches
+    hypr->>hypr: post_cleanup hook
+    hypr-->>User: Cleanup complete
 ```
 
 ## Configuration
@@ -123,10 +123,10 @@ Project-level and global hooks run independently and do not override each other.
 
 ### Project-level configuration
 
-Configure hooks in your project's `.hyprwt.toml` file:
+Configure hooks in your project's `.hypr.toml` file:
 
 ```toml
-# .hyprwt.toml
+# .hypr.toml
 [scripts]
 pre_create = "./scripts/validate-branch.sh"
 post_create = "npm install && cp .env.example .env"
@@ -139,7 +139,7 @@ post_switch = "npm run dev &"
 
 ### Global configuration
 
-Configure hooks globally in `~/.config/hyprwt/config.toml` (Linux) or `~/Library/Application Support/hyprwt/config.toml` (macOS):
+Configure hooks globally in `~/.config/hypr/config.toml` (Linux) or `~/Library/Application Support/hypr/config.toml` (macOS):
 
 ```toml
 # Global config
@@ -222,7 +222,7 @@ If you need to use a different programming language, create a separate script fi
 
 The `pre_create` hook runs in the **main repository directory** (not the worktree directory, which doesn't exist yet). However, the `AUTOWT_WORKTREE_DIR` environment variable is still set to the path where the worktree will be created.
 
-The `pre_create` hook can **prevent worktree creation** by exiting with a non-zero status. If this hook fails, hyprwt will completely abort worktree creation before the worktree is created.
+The `pre_create` hook can **prevent worktree creation** by exiting with a non-zero status. If this hook fails, hypr will completely abort worktree creation before the worktree is created.
 
 ```toml
 [scripts]
@@ -241,7 +241,7 @@ fi
 **Execution Context**: Subprocess in worktree directory  
 **Use cases**: File operations, git setup, dependency installation, configuration copying
 
-The `post_create` hook can **prevent terminal switching** by exiting with a non-zero status. If this hook fails, hyprwt will abort the operation (the worktree will exist but the terminal won't switch to it).
+The `post_create` hook can **prevent terminal switching** by exiting with a non-zero status. If this hook fails, hypr will abort the operation (the worktree will exist but the terminal won't switch to it).
 
 ```toml
 [scripts]
@@ -261,7 +261,7 @@ The post_create hook runs as a subprocess after the worktree is created but befo
 ### `post_create_async`
 
 **Timing**: After terminal switch (TAB/WINDOW modes) or before --after-init (ECHO/INPLACE modes)
-**Execution Context**: Original terminal where hyprwt was invoked
+**Execution Context**: Original terminal where hypr was invoked
 **Use cases**: Expensive dependency installations that don't block terminal interactivity
 
 The `post_create_async` hook is designed for **expensive operations** like `npm install`, `poetry install`, or `bundle install` that can run while the user is already working in the new terminal.
@@ -276,7 +276,7 @@ npm run build
 
 **Execution behavior varies by terminal mode:**
 
-- **TAB/WINDOW/VSCODE/CURSOR modes**: Runs in the original terminal _after_ the new terminal tab/window opens. The user can immediately start working in the new terminal while dependencies install in the background. The `hyprwt` process waits for completion before exiting.
+- **TAB/WINDOW/VSCODE/CURSOR modes**: Runs in the original terminal _after_ the new terminal tab/window opens. The user can immediately start working in the new terminal while dependencies install in the background. The `hypr` process waits for completion before exiting.
 
 - **ECHO/INPLACE modes**: Runs _before_ `--after-init` since no actual terminal switch occurs. Ensures expensive operations complete before any after-init commands run.
 
@@ -309,7 +309,7 @@ export DEV_MODE=true
 """
 ```
 
-The `session_init` hook is special—it's the only hook that runs **inside the new terminal session**. While other lifecycle hooks run inside the initial `hyprwt create` process, `session_init` scripts are literally pasted/typed into the terminal using terminal automation (i.e. AppleScript). This allows `session_init` scripts to: activate virtual environments or start interactive processes.
+The `session_init` hook is special—it's the only hook that runs **inside the new terminal session**. While other lifecycle hooks run inside the initial `hypr create` process, `session_init` scripts are literally pasted/typed into the terminal using terminal automation (i.e. AppleScript). This allows `session_init` scripts to: activate virtual environments or start interactive processes.
 
 ### `pre_cleanup`
 

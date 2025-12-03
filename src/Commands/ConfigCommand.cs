@@ -1,11 +1,11 @@
 using System.CommandLine;
-using Hyprwt.Configuration;
-using Hyprwt.Models;
+using Hypr.Configuration;
+using Hypr.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Spectre.Console;
 
-namespace Hyprwt.Commands;
+namespace Hypr.Commands;
 
 /// <summary>
 /// Manages configuration settings.

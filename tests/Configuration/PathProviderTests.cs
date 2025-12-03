@@ -1,5 +1,5 @@
 using FluentAssertions;
-using Hyprwt.Configuration;
+using Hypr.Configuration;
 
 namespace test.Configuration;
 
@@ -10,7 +10,7 @@ public class PathProviderTests
   public void PathProvider_OnLinux_GetGlobalConfigPath_ReturnsCorrectPath()
   {
     Assert.SkipUnless(OperatingSystem.IsLinux(), "tests requires linux");
-    var expectedPath = Path.Combine("/home", Environment.UserName, ".config", "hyprwt", "config.json");
+    var expectedPath = Path.Combine("/home", Environment.UserName, ".config", "hypr", "config.json");
     PathProvider.GetGlobalConfigPath().Should().Be(expectedPath);
   }
 
@@ -19,7 +19,7 @@ public class PathProviderTests
   public void PathProvider_OnMacOS_GetGlobalConfigPath_ReturnsCorrectPath()
   {
     Assert.SkipUnless(OperatingSystem.IsMacOS(), "tests requires macOS");
-    var expectedPath = Path.Combine("/Users", Environment.UserName, ".config", "hyprwt", "config.json");
+    var expectedPath = Path.Combine("/Users", Environment.UserName, ".config", "hypr", "config.json");
     PathProvider.GetGlobalConfigPath().Should().Be(expectedPath);
   }
 
@@ -28,7 +28,7 @@ public class PathProviderTests
   public void PathProvider_OnWindows_GetGlobalConfigPath_ReturnsCorrectPath()
   {
     Assert.SkipUnless(OperatingSystem.IsWindows(), "tests requires Windows");
-    var expectedPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hyprwt", "config.json");
+    var expectedPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "hypr", "config.json");
     PathProvider.GetGlobalConfigPath().ToLower().Should().Be(expectedPath.ToLower());
   }
 }

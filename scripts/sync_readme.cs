@@ -19,7 +19,7 @@ string TransformDocsContent(string content)
     content = Regex.Replace(content, gridPattern, ReplaceGridCards, RegexOptions.Singleline);
 
     // Fix relative links for docs
-    content = Regex.Replace(content, @"\]\(\./([^)]+)\.md\)", "](https://steveasleep.com/hyprwt/$1/)");
+    content = Regex.Replace(content, @"\]\(\./([^)]+)\.md\)", "](https://steveasleep.com/hypr/$1/)");
 
     return content;
 }
@@ -27,7 +27,7 @@ string TransformDocsContent(string content)
 string ReplaceGridCards(Match match)
 {
     var gridContent = match.Value;
-    var simplified = "**What hyprwt can do for you:**\n\n";
+    var simplified = "**What hypr can do for you:**\n\n";
 
     // Extract each card's title and description
     var cardPattern = @"\s*-\s+__([^_]+)__\s+---\s+(.*?)(?=\n\s*-\s+__|\s*</div>)";

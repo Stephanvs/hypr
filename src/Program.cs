@@ -1,7 +1,7 @@
 using System.CommandLine;
-using hyprwt;
-using Hyprwt.Commands;
-using Hyprwt.Configuration;
+using hypr;
+using Hypr.Commands;
+using Hypr.Configuration;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -12,9 +12,9 @@ using Microsoft.Extensions.Logging.Console;
 var configBuilder = new ConfigurationBuilder()
     .SetBasePath(Directory.GetCurrentDirectory())
     .AddJsonFile(PathProvider.GetGlobalConfigPath(), optional: true, reloadOnChange: true)
-    .AddJsonFile("hyprwt.json", optional: true, reloadOnChange: true)
-    .AddJsonFile(".hyprwt.json", optional: true, reloadOnChange: true)
-    .AddEnvironmentVariables("HYPRWT_");
+    .AddJsonFile("hypr.json", optional: true, reloadOnChange: true)
+    .AddJsonFile(".hypr.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables("HYPR_");
 
 var configuration = configBuilder.Build();
 
@@ -45,7 +45,7 @@ builder.Services.Scan(s => s.FromAssemblyOf<ListCommand>()
     .As<Command>());
 
 var host = builder.Build();
-var rootCommand = new RootCommand("hyprwt - Git worktree manager");
+var rootCommand = new RootCommand("hypr - Git worktree manager");
 var commands = host.Services.GetRequiredService<IEnumerable<Command>>();
 
 foreach (var cmd in commands)

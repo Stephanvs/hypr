@@ -1,6 +1,6 @@
 using System.CommandLine;
 
-namespace Hyprwt;
+namespace Hypr;
 
 public class DebugOption()
   : Option<bool>("--debug", "Enable debug logging.");

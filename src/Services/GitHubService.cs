@@ -6,7 +6,7 @@ using System.Text.Json.Serialization.Metadata;
 using Microsoft.Extensions.Logging;
 using Octokit;
 
-namespace Hyprwt.Services;
+namespace Hypr.Services;
 
 public enum PrStatus
 {
@@ -46,7 +46,7 @@ public class GitHubService(ILogger<GitHubService> logger)
         if (string.IsNullOrEmpty(token))
         {
             logger.LogWarning("GITHUB_TOKEN not set, GitHub features will be limited");
-            _client = new GitHubClient(new ProductHeaderValue("hyprwt"));
+            _client = new GitHubClient(new ProductHeaderValue("hypr"));
             return;
         }
 

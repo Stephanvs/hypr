@@ -6,12 +6,12 @@
      <ImplicitUsings>enable</ImplicitUsings>
 
      <!-- Assembly Info -->
-     <AssemblyName>hyprwt</AssemblyName>
-     <Authors>Stephan van Stekelenburg</Authors>
-     <Description>Customizable git worktree manager</Description>
-     <Copyright>Copyright © 2025</Copyright>
-     <Product>hyprwt</Product>
-     <PackageId>hyprwt</PackageId>
+      <AssemblyName>hypr</AssemblyName>
+      <Authors>Stephan van Stekelenburg</Authors>
+      <Description>Customizable git worktree manager</Description>
+      <Copyright>Copyright © 2025</Copyright>
+      <Product>hypr</Product>
+      <PackageId>hypr</PackageId>
      <PackageTags>git;worktree;cli</PackageTags>
      <RepositoryUrl>https://github.com/$(GITHUB_REPOSITORY)</RepositoryUrl>
      <RepositoryType>git</RepositoryType>
@@ -20,7 +20,7 @@
 
      <!-- Dotnet Tool Configuration -->
      <PackAsTool>true</PackAsTool>
-     <ToolCommandName>hyprwt</ToolCommandName>
+      <ToolCommandName>hypr</ToolCommandName>
      <PackageOutputPath>./nupkg</PackageOutputPath>
 
      <!-- Publishing Configuration -->

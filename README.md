@@ -1,17 +1,17 @@
-# hyprwt 🚀
+# hypr 🚀
 
 > **A better git worktree experience**
 
-`hyprwt` is a modern, highly customizable CLI tool that supercharges your git worktree workflow. It makes creating, switching, and managing worktrees effortless, with first-class terminal integration and powerful automation hooks.
+`hypr` is a modern, highly customizable CLI tool that supercharges your git worktree workflow. It makes creating, switching, and managing worktrees effortless, with first-class terminal integration and powerful automation hooks.
 
-## Why `hyprwt`?
+## Why `hypr`?
 
-Git worktrees are amazing for parallel development, but managing them manually is tedious. `hyprwt` solves this:
+Git worktrees are amazing for parallel development, but managing them manually is tedious. `hypr` solves this:
 
-*   **⚡ Instant Context Switching**: `hyprwt feature-branch` handles everything—fetching, creating the worktree, and opening it.
+*   **⚡ Instant Context Switching**: `hypr feature-branch` handles everything—fetching, creating the worktree, and opening it.
 *   **🖥️ Terminal Integrated**: Automatically opens your worktree in a new tab or window (supports iTerm2, Tmux, Ghostty, VS Code, and more).
 *   **✨ Interactive TUI**: built-in interactive menu for selecting and managing worktrees.
-*   **🧹 Smart Cleanup**: `hyprwt cleanup` intelligently finds and deletes worktrees for merged or closed branches (including GitHub integration).
+*   **🧹 Smart Cleanup**: `hypr cleanup` intelligently finds and deletes worktrees for merged or closed branches (including GitHub integration).
 *   **🔗 Lifecycle Hooks**: Run scripts automatically on create, switch, or cleanup (e.g., `bun install` or copying `.env` files).
 
 ## 📦 Installation
@@ -20,15 +20,15 @@ Git worktrees are amazing for parallel development, but managing them manually i
 
 Support for various package managers is available:
 
-*   **Homebrew (macOS)**: `brew install hyprwt`
-*   **Winget (Windows)**: `winget install hyprwt`
-*   **Scoop (Windows)**: `scoop install hyprwt`
-*   **AUR (Arch Linux)**: `yay -S hyprwt`
+*   **Homebrew (macOS)**: `brew install hypr`
+*   **Winget (Windows)**: `winget install hypr`
+*   **Scoop (Windows)**: `scoop install hypr`
+*   **AUR (Arch Linux)**: `yay -S hypr`
 
 ### .NET Tool (Alternative)
 
 ```bash
-dotnet tool install --global hyprwt
+dotnet tool install --global hypr
 ```
 
 ## ⚡ Usage
@@ -38,21 +38,21 @@ Create a new worktree for a feature branch and open it instantly in a new tab:
 
 ```bash
 # Creates a worktree for 'my-feature' and opens it
-hyprwt my-feature
+hypr my-feature
 ```
 
 ### Cleanup
-Clean up old worktrees. `hyprwt` checks if branches are merged or if their PRs are closed.
+Clean up old worktrees. `hypr` checks if branches are merged or if their PRs are closed.
 
 ```bash
-hyprwt cleanup
+hypr cleanup
 ```
 
 ## 🛠️ Configuration
 
-`hyprwt` is highly configurable via a global or project-local `hyprwt.json` file.
+`hypr` is highly configurable via a global or project-local `hypr.json` file.
 
-**Example `hyprwt.json`:**
+**Example `hypr.json`:**
 
 ```json
 {

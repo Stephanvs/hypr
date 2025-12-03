@@ -1,9 +1,9 @@
-using Hyprwt.Models;
+using Hypr.Models;
 using LibGit2Sharp;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 
-namespace Hyprwt.Services;
+namespace Hypr.Services;
 
 /// <summary>
 /// Git operations service for hyprwt.

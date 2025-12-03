@@ -1,9 +1,9 @@
-using Hyprwt.Utils;
+using Hypr.Utils;
 using Microsoft.Extensions.Logging;
 using System.Diagnostics;
-using Hyprwt.Configuration;
+using Hypr.Configuration;
 
-namespace Hyprwt.Services;
+namespace Hypr.Services;
 
 /// <summary>
 /// Terminal automation service.
