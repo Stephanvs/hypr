@@ -20,4 +20,17 @@ public static class PathProvider
 
     return Path.Combine(configDir, "config.json");
   }
+
+  /// <summary>
+  /// Gets the platform-specific log file path.
+  /// </summary>
+  public static string GetLogFilePath()
+  {
+    var logDir = OperatingSystem.IsWindows()
+      ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "hypr", "logs")
+      : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share", "hypr", "logs");
+
+    Directory.CreateDirectory(logDir);
+    return Path.Combine(logDir, "hypr.log");
+  }
 }
