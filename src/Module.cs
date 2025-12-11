@@ -4,7 +4,7 @@ using Hypr.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace hypr;
+namespace Hypr;
 
 internal static class Module
 {

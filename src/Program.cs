@@ -5,10 +5,7 @@ using Hypr.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Serilog;
-using Serilog.Events;
-using hypr;
+using Hypr;
 
 // Build configuration with proper precedence order
 var configBuilder = new ConfigurationBuilder()
@@ -39,6 +36,7 @@ builder.Services.Scan(s => s.FromAssemblyOf<ListCommand>()
 
 var host = builder.Build();
 var rootCommand = new RootCommand("hypr - Git worktree manager");
+rootCommand.Options.Add(new DebugOption());
 var commands = host.Services.GetRequiredService<IEnumerable<Command>>();
 
 foreach (var cmd in commands)
