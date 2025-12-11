@@ -1,12 +1,11 @@
 using System.CommandLine;
-using hypr;
 using Hypr.Commands;
 using Hypr.Configuration;
+using Hypr.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Logging.Console;
+using Hypr;
 
 // Build configuration with proper precedence order
 var configBuilder = new ConfigurationBuilder()
@@ -21,17 +20,8 @@ var configuration = configBuilder.Build();
 var builder = Host.CreateApplicationBuilder(args);
 builder.Configuration.AddConfiguration(configuration);
 
-builder.Services.AddLogging(x =>
-{
-    x.ClearProviders();
-    x.AddSimpleConsole(f =>
-    {
-        f.SingleLine = true;
-        f.TimestampFormat = "HH:mm:ss ";
-        f.IncludeScopes = true;
-        f.ColorBehavior = LoggerColorBehavior.Enabled;
-    });
-});
+// Add Hypr logging with debug flag support
+builder.Services.AddHyprLogging(args);
 
 // Register configuration
 builder.Services.AddSingleton<IConfiguration>(configuration);
@@ -46,6 +36,7 @@ builder.Services.Scan(s => s.FromAssemblyOf<ListCommand>()
 
 var host = builder.Build();
 var rootCommand = new RootCommand("hypr - Git worktree manager");
+rootCommand.Options.Add(new DebugOption());
 var commands = host.Services.GetRequiredService<IEnumerable<Command>>();
 
 foreach (var cmd in commands)
