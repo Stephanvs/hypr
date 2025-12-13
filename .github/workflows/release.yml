@@ -166,17 +166,3 @@ jobs:
     - name: Publish to NuGet
       run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
 
-  publish-winget:
-    needs: create-release
-    runs-on: windows-latest
-
-    steps:
-    - name: Get version from tag
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-      shell: bash
-
-    - name: Publish to WinGet
-      uses: vedantmgoyal9/winget-releaser@v2
-      with:
-        identifier: Stephanvs.hypr
-        token: ${{ secrets.WINGETCREATE_TOKEN }}

@@ -1,0 +1,12 @@
+name: Publish to WinGet
+on:
+  release:
+    types: [ released ]
+jobs:
+  publish:
+    runs-on: windows-latest
+    steps:
+      - uses: vedantmgoyal9/winget-releaser@main
+        with:
+          identifier: Stephanvs.hypr
+          token: ${{ secrets.WINGET_TOKEN }}
