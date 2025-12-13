@@ -161,18 +161,12 @@ jobs:
     runs-on: windows-latest
 
     steps:
+    - name: Get version from tag
+      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
+      shell: bash
+
     - name: Publish to WinGet
-      uses: isaacrlevin/winget-publish-action
+      uses: vedantmgoyal9/winget-releaser@v2
       with:
-        publish-type: "Create"
-        user: "Stephanvs"
-        package: "hypr"
-        version: ${{ env.VERSION }}
-        url: "https://github.com/Stephanvs/hypr/releases/download/v${{ env.VERSION }}/hypr-windows-x64.tar.gz"
-        arch: "x64"
-        installer-type: "zip"
-        publisher: "Stephanvs"
-        package-name: "hypr"
-        license: "MIT"
-        short-description: "Hypr is a small tool to simplify git worktrees"
+        identifier: Stephanvs.hypr
         token: ${{ secrets.WINGETCREATE_TOKEN }}
