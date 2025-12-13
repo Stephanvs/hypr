@@ -155,3 +155,24 @@ jobs:
 
     - name: Publish to NuGet
       run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  publish-winget:
+    needs: create-release
+    runs-on: windows-latest
+
+    steps:
+    - name: Publish to WinGet
+      uses: isaacrlevin/winget-publish-action@1.0
+      with:
+        publish-type: "Create"
+        user: "Stephanvs"
+        package: "hypr"
+        version: ${{ env.VERSION }}
+        url: "https://github.com/Stephanvs/hypr/releases/download/v${{ env.VERSION }}/hypr-windows-x64.tar.gz"
+        arch: "x64"
+        installer-type: "zip"
+        publisher: "Stephanvs"
+        package-name: "hypr"
+        license: "MIT"
+        short-description: "Hypr is a small tool to simplify git worktrees"
+        token: ${{ secrets.WINGETCREATE_TOKEN }}
