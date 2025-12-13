@@ -59,7 +59,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: hypr-${{ matrix.name }}
-        path: ./publish/${{ matrix.name }}/hypr${{ contains(matrix.name, 'windows') && '.exe' || '' }}
+        path: ./publish/${{ matrix.name }}/
 
   build-dotnet-tool:
     runs-on: ubuntu-latest
@@ -103,19 +103,25 @@ jobs:
       run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
       shell: bash
 
+    - name: Install zip
+      run: sudo apt-get update && sudo apt-get install -y zip
+
     - name: Download all artifacts
       uses: actions/download-artifact@v4
       with:
         path: ./artifacts
 
-    - name: Prepare release files
+    - name: Create archives
       run: |
         cd artifacts
-        # Files are already single executables, just rename them appropriately
-        for file in hypr-*; do
-          if [ -f "$file" ]; then
-            if [[ "$file" == *"windows"* ]]; then
-              mv "$file" "${file}.exe"
+        for dir in hypr-*; do
+          if [ -d "$dir" ]; then
+            if [[ "$dir" == *"windows"* ]]; then
+              # Use zip for Windows (required by WinGet)
+              zip -r "${dir}.zip" "$dir"
+            else
+              # Use tar.gz for other platforms
+              tar -czf "${dir}.tar.gz" -C "$dir" .
             fi
           fi
         done
@@ -126,7 +132,8 @@ jobs:
         tag_name: v${{ env.VERSION }}
         name: Release v${{ env.VERSION }}
         files: |
-          artifacts/hypr-*
+          artifacts/*.tar.gz
+          artifacts/*.zip
           artifacts/dotnet-tool/*.nupkg
         generate_release_notes: true
       env:
