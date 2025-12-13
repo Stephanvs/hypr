@@ -59,7 +59,7 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: hypr-${{ matrix.name }}
-        path: ./publish/${{ matrix.name }}/
+        path: ./publish/${{ matrix.name }}/hypr${{ contains(matrix.name, 'windows') && '.exe' || '' }}
 
   build-dotnet-tool:
     runs-on: ubuntu-latest
@@ -108,12 +108,15 @@ jobs:
       with:
         path: ./artifacts
 
-    - name: Create archives
+    - name: Prepare release files
       run: |
         cd artifacts
-        for dir in hypr-*; do
-          if [ -d "$dir" ]; then
-            tar -czf "${dir}.tar.gz" -C "$dir" .
+        # Files are already single executables, just rename them appropriately
+        for file in hypr-*; do
+          if [ -f "$file" ]; then
+            if [[ "$file" == *"windows"* ]]; then
+              mv "$file" "${file}.exe"
+            fi
           fi
         done
 
@@ -123,7 +126,7 @@ jobs:
         tag_name: v${{ env.VERSION }}
         name: Release v${{ env.VERSION }}
         files: |
-          artifacts/*.tar.gz
+          artifacts/hypr-*
           artifacts/dotnet-tool/*.nupkg
         generate_release_notes: true
       env:
