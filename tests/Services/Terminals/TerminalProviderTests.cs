@@ -116,12 +116,18 @@ public class InplaceProviderTests
         var originalDirectory = Directory.GetCurrentDirectory();
         var tempDir = Path.GetTempPath();
 
+        // Resolve the expected path by temporarily changing to it and back
+        // This handles symlinks on macOS where /var -> /private/var
+        Directory.SetCurrentDirectory(tempDir);
+        var expectedDir = Directory.GetCurrentDirectory();
+        Directory.SetCurrentDirectory(originalDirectory);
+
         try
         {
             var result = _provider.Open(tempDir, TerminalMode.Inplace);
 
             Assert.True(result);
-            Assert.Equal(tempDir.TrimEnd(Path.DirectorySeparatorChar), Directory.GetCurrentDirectory().TrimEnd(Path.DirectorySeparatorChar));
+            Assert.Equal(expectedDir.TrimEnd(Path.DirectorySeparatorChar), Directory.GetCurrentDirectory().TrimEnd(Path.DirectorySeparatorChar));
         }
         finally
         {
