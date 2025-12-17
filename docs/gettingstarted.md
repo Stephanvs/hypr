@@ -6,15 +6,35 @@ This guide will walk you through installing `hypr`, setting it up for a project,
 
 Before you begin, make sure you have the following installed:
 
--   **Python 3.10+**: You can check your version with `python3 --version`.
--   **Git 2.5+**: `hypr` relies on modern git worktree functionality. Check your version with `git --version`. Git 2.5 was released in 2015, so this shouldn’t be a problem.
+-   **Git 2.5+**: `hypr` relies on modern git worktree functionality. Check your version with `git --version`. Git 2.5 was released in 2015, so this shouldn't be a problem.
 -   **A supported terminal (recommended)**: For the best experience, use a terminal with good tab and window management, like iTerm2 on macOS. See the [Terminal Support](terminalsupport.md) page for more details.
 
 ## Installation
 
-### Pip
+### Homebrew (macOS)
 
-First, `pip install hypr`. To verify the installation, run `hypr` in a git repository to see its status:
+```bash
+brew install stephanvs/tap/hypr
+```
+
+### Scoop (Windows)
+
+```bash
+scoop bucket add hypr https://github.com/Stephanvs/hypr
+scoop install hypr
+```
+
+### AUR (Arch Linux)
+
+```bash
+yay -S hypr-bin
+```
+
+### Manual Download
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/Stephanvs/hypr/releases).
+
+To verify the installation, run `hypr` in a git repository to see its status:
 
 ```txt
   Worktrees:
