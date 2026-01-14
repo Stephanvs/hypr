@@ -3,6 +3,8 @@ using Hypr.Commands;
 using Hypr.Configuration;
 using Hypr.Hooks;
 using Hypr.Services;
+using Hypr.Services.Terminals;
+using Hypr.Utils;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
