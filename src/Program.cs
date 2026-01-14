@@ -1,5 +1,4 @@
 using System.CommandLine;
-using Hypr.Commands;
 using Hypr.Configuration;
 using Hypr.Logging;
 using Microsoft.Extensions.Configuration;
@@ -26,13 +25,8 @@ builder.Services.AddHyprLogging(args);
 // Register configuration
 builder.Services.AddSingleton<IConfiguration>(configuration);
 
-// Register services and configuration sections
+// Register services, configuration sections, and commands
 builder.Services.AddServices(builder.Configuration);
-
-// Automatically discover and register all commands
-builder.Services.Scan(s => s.FromAssemblyOf<ListCommand>()
-    .AddClasses(c => c.AssignableTo<Command>())
-    .As<Command>());
 
 var host = builder.Build();
 var rootCommand = new RootCommand("hypr - Git worktree manager");

@@ -19,6 +19,9 @@ jobs:
           - os: ubuntu-latest
             rid: linux-x64
             name: linux-x64
+          - os: ubuntu-latest
+            rid: linux-arm64
+            name: linux-arm64
           - os: windows-latest
             rid: win-x64
             name: windows-x64
