@@ -29,10 +29,11 @@
      <PublishTrimmed>true</PublishTrimmed>
      <TrimMode>link</TrimMode>
      <EnableCompressionInSingleFile>true</EnableCompressionInSingleFile>
+     <!-- Embed native libraries (LibGit2Sharp) into single-file and auto-extract at runtime -->
+     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
    </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Scrutor" Version="6.1.0" />
     <PackageReference Include="Serilog.Extensions.Hosting" Version="10.0.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="7.0.0" />
@@ -50,7 +51,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="10.0.0" />
    </ItemGroup>
 
-    <ItemGroup>
-      <None Include="../README.md" Pack="true" PackagePath="README.md" />
-    </ItemGroup>
+     <ItemGroup>
+       <None Include="../README.md" Pack="true" PackagePath="README.md" />
+     </ItemGroup>
  </Project>
