@@ -77,6 +77,7 @@ internal static class Module
       nameof(TmuxProvider) => Platform.Linux | Platform.MacOS,
       nameof(VSCodeProvider) => Platform.All,
       nameof(CursorProvider) => Platform.All,
+      nameof(WezTermProvider) => Platform.All,
       nameof(EchoProvider) => Platform.All,
       nameof(InplaceProvider) => Platform.All,
       _ => Platform.None
