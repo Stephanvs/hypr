@@ -21,6 +21,7 @@
 
 ### All Platforms
 
+- **WezTerm** - Opens new tabs when an existing WezTerm session is reachable; otherwise falls back to a new window
 - **VS Code** - Opens worktrees in VS Code (`--terminal=vscode`)
 - **Cursor** - Opens worktrees in Cursor (`--terminal=cursor`)
 
