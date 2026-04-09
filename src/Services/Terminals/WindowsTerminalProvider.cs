@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using Hypr.Configuration;
 using Microsoft.Extensions.Logging;
 
@@ -54,30 +55,7 @@ public class WindowsTerminalProvider : ITerminalProvider
     {
         try
         {
-            var psi = new ProcessStartInfo
-            {
-                FileName = "wt",
-                UseShellExecute = false
-            };
-
-            var hasInitCommand = !string.IsNullOrEmpty(initCommand);
-
-            if (hasInitCommand)
-            {
-                psi.ArgumentList.Add(mode == TerminalMode.Tab ? "new-tab" : "new-window");
-                psi.ArgumentList.Add("-d");
-                psi.ArgumentList.Add(workingDirectory);
-                psi.ArgumentList.Add("powershell");
-                psi.ArgumentList.Add("-NoExit");
-                psi.ArgumentList.Add("-Command");
-                psi.ArgumentList.Add(initCommand!);
-            }
-            else
-            {
-                psi.ArgumentList.Add(mode == TerminalMode.Tab ? "new-tab" : "new-window");
-                psi.ArgumentList.Add("-d");
-                psi.ArgumentList.Add(workingDirectory);
-            }
+            var psi = CreateStartInfo(workingDirectory, mode, initCommand);
 
             Process.Start(psi);
             _logger.LogInformation("Opened {Path} in Windows Terminal ({Mode})", workingDirectory, mode);
@@ -88,5 +66,34 @@ public class WindowsTerminalProvider : ITerminalProvider
             _logger.LogError(ex, "Failed to open Windows Terminal");
             return false;
         }
+    }
+
+    internal static ProcessStartInfo CreateStartInfo(string workingDirectory, TerminalMode mode, string? initCommand = null)
+    {
+        var psi = new ProcessStartInfo
+        {
+            FileName = "wt",
+            UseShellExecute = false
+        };
+
+        if (mode == TerminalMode.Window)
+        {
+            psi.ArgumentList.Add("-w");
+            psi.ArgumentList.Add("new");
+        }
+
+        psi.ArgumentList.Add("new-tab");
+        psi.ArgumentList.Add("-d");
+        psi.ArgumentList.Add(workingDirectory);
+
+        if (!string.IsNullOrWhiteSpace(initCommand))
+        {
+            psi.ArgumentList.Add("powershell");
+            psi.ArgumentList.Add("-NoExit");
+            psi.ArgumentList.Add("-EncodedCommand");
+            psi.ArgumentList.Add(Convert.ToBase64String(Encoding.Unicode.GetBytes(initCommand)));
+        }
+
+        return psi;
     }
 }

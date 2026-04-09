@@ -1,4 +1,5 @@
 using FakeItEasy;
+using System.Text;
 using Hypr.Configuration;
 using Hypr.Services.Terminals;
 using Microsoft.Extensions.Logging;
@@ -270,6 +271,45 @@ public class WindowsTerminalProviderTests
     public void SupportsMode_ReturnsExpectedValue(TerminalMode mode, bool expected)
     {
         Assert.Equal(expected, _provider.SupportsMode(mode));
+    }
+
+    [Fact]
+    public void CreateStartInfo_WindowModeWithInitCommand_UsesNewWindowSyntaxSupportedByWt()
+    {
+        var psi = WindowsTerminalProvider.CreateStartInfo(
+            @"E:\Code\hypr-worktrees\fix-windows-terminal",
+            TerminalMode.Window,
+            "Set-Content -Path .hypr-switch-test.txt -Value ok");
+
+        Assert.Equal(
+            [
+                "-w",
+                "new",
+                "new-tab",
+                "-d",
+                @"E:\Code\hypr-worktrees\fix-windows-terminal",
+                "powershell",
+                "-NoExit",
+                "-EncodedCommand"
+            ],
+            psi.ArgumentList.Take(8).ToArray());
+
+        var decodedCommand = Encoding.Unicode.GetString(Convert.FromBase64String(psi.ArgumentList[8]));
+        Assert.Equal("Set-Content -Path .hypr-switch-test.txt -Value ok", decodedCommand);
+    }
+
+    [Fact]
+    public void CreateStartInfo_WithMultipleCommands_EncodesEntirePowerShellScript()
+    {
+        const string command = "Set-Content -Path .hypr-a.txt -Value a; Set-Content -Path .hypr-b.txt -Value b";
+
+        var psi = WindowsTerminalProvider.CreateStartInfo(
+            @"E:\Code\hypr-worktrees\fix-windows-terminal",
+            TerminalMode.Window,
+            command);
+
+        var decodedCommand = Encoding.Unicode.GetString(Convert.FromBase64String(psi.ArgumentList[8]));
+        Assert.Equal(command, decodedCommand);
     }
 }
 
