@@ -112,7 +112,7 @@ public class SwitchCommand : Command
             var branch = ctx.GetRequiredValue(BranchArgument);
             var fromBranch = ctx.GetValue(FromBranchOption);
             var terminalMode = ctx.GetValue(TerminalModeOption) ?? terminalConfig.Mode;
-            var initScript = ctx.GetValue(AfterInitOption) ?? scriptsConfig.SessionInit;
+            var initScript = scriptsConfig.SessionInit;
             var afterInit = ctx.GetValue(AfterInitOption);
             var dir = ctx.GetValue(DirOption);
 
