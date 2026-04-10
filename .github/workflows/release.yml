@@ -11,7 +11,19 @@ permissions:
   id-token: write
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.value }}
+
+    steps:
+    - name: Resolve version from tag
+      id: version
+      shell: bash
+      run: echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+
   build-binaries:
+    needs: prepare
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -36,11 +48,6 @@ jobs:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
-    - name: Get version from tag
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-      shell: bash
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -50,13 +57,13 @@ jobs:
       run: dotnet restore
 
     - name: Build with version from tag
-      run: dotnet build src/hypr.csproj --configuration Release --no-restore -p:Version=${{ env.VERSION }}
+      run: dotnet build src/hypr.csproj --configuration Release --no-restore -p:Version=${{ needs.prepare.outputs.version }}
 
     - name: Test
       run: dotnet test --no-restore --verbosity normal
 
     - name: Publish binary with version
-      run: dotnet publish src/hypr.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.name }} -p:Version=${{ env.VERSION }}
+      run: dotnet publish src/hypr.csproj --configuration Release --runtime ${{ matrix.rid }} --self-contained true --output ./publish/${{ matrix.name }} -p:Version=${{ needs.prepare.outputs.version }}
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
@@ -65,17 +72,13 @@ jobs:
         path: ./publish/${{ matrix.name }}/
 
   build-dotnet-tool:
+    needs: prepare
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
-    - name: Get version from tag
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-      shell: bash
-
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -85,11 +88,11 @@ jobs:
       run: dotnet restore
 
     - name: Pack dotnet tool with version from tag
-      run: dotnet pack src/hypr.csproj --configuration Release --output ./nupkg -p:Version=${{ env.VERSION }}
+      run: dotnet pack src/hypr.csproj --configuration Release --output ./nupkg -p:Version=${{ needs.prepare.outputs.version }}
 
     - name: Smoke test packaged dotnet tool
       run: |
-        dotnet tool install --tool-path ./tool-smoke --add-source ./nupkg hypr --version ${{ env.VERSION }}
+        dotnet tool install --tool-path ./tool-smoke --add-source ./nupkg hypr --version ${{ needs.prepare.outputs.version }}
         ./tool-smoke/hypr --help
 
     - name: Upload dotnet tool package
@@ -99,18 +102,13 @@ jobs:
         path: ./nupkg/
 
   create-release:
-    needs: [build-binaries, build-dotnet-tool]
+    needs: [prepare, build-binaries, build-dotnet-tool]
     runs-on: ubuntu-latest
 
     steps:
     - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-
-    - name: Get version from tag
-      run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_ENV
-      shell: bash
-
     - name: Install zip
       run: sudo apt-get update && sudo apt-get install -y zip
 
@@ -137,8 +135,8 @@ jobs:
     - name: Create GitHub Release
       uses: softprops/action-gh-release@v2
       with:
-        tag_name: v${{ env.VERSION }}
-        name: Release v${{ env.VERSION }}
+        tag_name: v${{ needs.prepare.outputs.version }}
+        name: Release v${{ needs.prepare.outputs.version }}
         files: |
           artifacts/*.tar.gz
           artifacts/*.zip
@@ -148,7 +146,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   publish-nuget:
-    needs: build-dotnet-tool
+    needs: [prepare, build-dotnet-tool]
     runs-on: ubuntu-latest
 
     steps:
@@ -175,9 +173,9 @@ jobs:
       shell: bash
       run: |
         shopt -s nullglob
-        for package in ./nupkg/hypr.*.${{ env.VERSION }}.nupkg; do
+        for package in ./nupkg/hypr.*.${{ needs.prepare.outputs.version }}.nupkg; do
           dotnet nuget push "$package" --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
         done
 
     - name: Publish pointer package to NuGet
-      run: dotnet nuget push ./nupkg/hypr.${{ env.VERSION }}.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+      run: dotnet nuget push ./nupkg/hypr.${{ needs.prepare.outputs.version }}.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
