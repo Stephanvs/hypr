@@ -31,6 +31,8 @@ Support for various package managers is available:
 dotnet tool install --global hypr
 ```
 
+On .NET 10 SDK-based installs, supported platforms automatically receive a self-contained tool package. Other platforms fall back to the framework-dependent `any` package.
+
 ## ⚡ Usage
 
 ### Create & Switch

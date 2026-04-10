@@ -87,6 +87,11 @@ jobs:
     - name: Pack dotnet tool with version from tag
       run: dotnet pack src/hypr.csproj --configuration Release --output ./nupkg -p:Version=${{ env.VERSION }}
 
+    - name: Smoke test packaged dotnet tool
+      run: |
+        dotnet tool install --tool-path ./tool-smoke --add-source ./nupkg hypr --version ${{ env.VERSION }}
+        ./tool-smoke/hypr --help
+
     - name: Upload dotnet tool package
       uses: actions/upload-artifact@v4
       with:
@@ -166,6 +171,13 @@ jobs:
       with:
         user: ${{ secrets.NUGET_USER }}
 
-    - name: Publish to NuGet
-      run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+    - name: Publish RID-specific packages to NuGet
+      shell: bash
+      run: |
+        shopt -s nullglob
+        for package in ./nupkg/hypr.*.${{ env.VERSION }}.nupkg; do
+          dotnet nuget push "$package" --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+        done
 
+    - name: Publish pointer package to NuGet
+      run: dotnet nuget push ./nupkg/hypr.${{ env.VERSION }}.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate

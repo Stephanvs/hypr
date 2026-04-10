@@ -22,8 +22,13 @@
      <PackAsTool>true</PackAsTool>
       <ToolCommandName>hypr</ToolCommandName>
      <PackageOutputPath>./nupkg</PackageOutputPath>
+     <RuntimeIdentifiers>win-x64;linux-x64;linux-arm64;osx-x64;osx-arm64;any</RuntimeIdentifiers>
+     <!-- Create self-contained tool packages for supported RIDs and keep an 'any' fallback package. -->
+     <ToolPackageRuntimeIdentifiers>win-x64;linux-x64;linux-arm64;osx-x64;osx-arm64;any</ToolPackageRuntimeIdentifiers>
+    </PropertyGroup>
 
-     <!-- Publishing Configuration -->
+   <PropertyGroup Condition="'$(RuntimeIdentifier)' != '' and '$(RuntimeIdentifier)' != 'any'">
+     <!-- Standalone binaries only apply to RID-specific publishes and tool packages. -->
      <PublishSingleFile>true</PublishSingleFile>
      <SelfContained>true</SelfContained>
      <PublishTrimmed>true</PublishTrimmed>
