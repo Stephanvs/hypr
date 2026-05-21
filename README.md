@@ -20,10 +20,10 @@ Git worktrees are amazing for parallel development, but managing them manually i
 
 Support for various package managers is available:
 
-*   **Homebrew (macOS)**: `brew install hypr`
+*   **Homebrew (macOS/Linux)**: `brew install stephanvs/tap/hypr`
 *   **Winget (Windows)**: `winget install hypr`
 *   **Scoop (Windows)**: `scoop install hypr`
-*   **AUR (Arch Linux)**: `yay -S hypr`
+*   **AUR (Arch Linux)**: `yay -S hypr-bin`
 
 ### .NET Tool (Alternative)
 

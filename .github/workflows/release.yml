@@ -179,3 +179,246 @@ jobs:
 
     - name: Publish pointer package to NuGet
       run: dotnet nuget push ./nupkg/hypr.${{ needs.prepare.outputs.version }}.nupkg --api-key ${{steps.login.outputs.NUGET_API_KEY}} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+  publish-homebrew:
+    needs: [prepare, create-release]
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Checkout Homebrew tap
+      uses: actions/checkout@v4
+      with:
+        repository: Stephanvs/homebrew-tap
+        token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        path: homebrew-tap
+
+    - name: Generate Homebrew formula
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        version="${{ needs.prepare.outputs.version }}"
+        base_url="https://github.com/Stephanvs/hypr/releases/download/v${version}"
+
+        checksum() {
+          local asset="$1"
+          local path="${RUNNER_TEMP}/${asset}"
+          curl -fsSLo "$path" "${base_url}/${asset}"
+          shasum -a 256 "$path" | awk '{print $1}'
+        }
+
+        linux_x64_sha="$(checksum hypr-linux-x64.tar.gz)"
+        linux_arm64_sha="$(checksum hypr-linux-arm64.tar.gz)"
+        macos_x64_sha="$(checksum hypr-macos-x64.tar.gz)"
+        macos_arm64_sha="$(checksum hypr-macos-arm64.tar.gz)"
+
+        mkdir -p homebrew-tap/Formula
+        cat > homebrew-tap/Formula/hypr.rb <<EOF
+        class Hypr < Formula
+          desc "Customizable git worktree manager"
+          homepage "https://github.com/Stephanvs/hypr"
+          version "${version}"
+          license "MIT"
+
+          on_macos do
+            on_arm do
+              url "${base_url}/hypr-macos-arm64.tar.gz"
+              sha256 "${macos_arm64_sha}"
+            end
+
+            on_intel do
+              url "${base_url}/hypr-macos-x64.tar.gz"
+              sha256 "${macos_x64_sha}"
+            end
+          end
+
+          on_linux do
+            on_arm do
+              url "${base_url}/hypr-linux-arm64.tar.gz"
+              sha256 "${linux_arm64_sha}"
+            end
+
+            on_intel do
+              url "${base_url}/hypr-linux-x64.tar.gz"
+              sha256 "${linux_x64_sha}"
+            end
+          end
+
+          def install
+            bin.install "hypr"
+          end
+
+          test do
+            assert_match "Usage", shell_output("#{bin}/hypr --help")
+          end
+        end
+        EOF
+
+    - name: Smoke test Homebrew formula
+      run: |
+        brew install --formula homebrew-tap/Formula/hypr.rb
+        brew test hypr
+        hypr --help
+        brew uninstall hypr
+
+    - name: Publish Homebrew formula
+      shell: bash
+      run: |
+        set -euo pipefail
+        cd homebrew-tap
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git add Formula/hypr.rb
+        if git diff --cached --quiet; then
+          echo "Homebrew formula is already current."
+        else
+          git commit -m "hypr ${{ needs.prepare.outputs.version }}"
+          git push
+        fi
+
+    - name: Smoke test published Homebrew package
+      run: |
+        brew untap stephanvs/tap || true
+        brew tap stephanvs/tap https://github.com/Stephanvs/homebrew-tap
+        brew install stephanvs/tap/hypr
+        brew test stephanvs/tap/hypr
+        hypr --help
+
+  publish-aur:
+    needs: [prepare, create-release]
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    env:
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+
+    steps:
+    - name: Check AUR publishing secret
+      id: aur-secret
+      shell: bash
+      run: |
+        if [ -n "$AUR_SSH_PRIVATE_KEY" ]; then
+          echo "available=true" >> "$GITHUB_OUTPUT"
+        else
+          echo "::notice::AUR_SSH_PRIVATE_KEY is not configured; package build smoke test will run, but AUR publishing is skipped."
+          echo "available=false" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Install packaging tools
+      run: |
+        pacman -Syu --noconfirm --needed base-devel curl git jq openssh sudo
+        useradd -m builder
+        echo 'builder ALL=(ALL) NOPASSWD: ALL' >/etc/sudoers.d/builder
+
+    - uses: actions/checkout@v4
+
+    - name: Generate AUR package files
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        version="${{ needs.prepare.outputs.version }}"
+        base_url="https://github.com/Stephanvs/hypr/releases/download/v${version}"
+
+        checksum() {
+          local asset="$1"
+          curl -fsSL "${base_url}/${asset}" | sha256sum | awk '{print $1}'
+        }
+
+        linux_x64_sha="$(checksum hypr-linux-x64.tar.gz)"
+        linux_arm64_sha="$(checksum hypr-linux-arm64.tar.gz)"
+
+        mkdir -p aur-build
+        cat > aur-build/PKGBUILD <<EOF
+        # Maintainer: Stephan van Stekelenburg <stephan@hayman.io>
+        pkgname=hypr-bin
+        pkgver=${version}
+        pkgrel=1
+        pkgdesc='Customizable git worktree manager'
+        arch=('x86_64' 'aarch64')
+        url="https://github.com/Stephanvs/hypr"
+        license=('MIT')
+        depends=('gcc-libs' 'glibc')
+        provides=('hypr')
+        conflicts=('hypr')
+        options=('!strip' '!debug')
+        source_x86_64=("\$pkgname-\$pkgver-x86_64.tar.gz::${base_url}/hypr-linux-x64.tar.gz")
+        source_aarch64=("\$pkgname-\$pkgver-aarch64.tar.gz::${base_url}/hypr-linux-arm64.tar.gz")
+        sha256sums_x86_64=('${linux_x64_sha}')
+        sha256sums_aarch64=('${linux_arm64_sha}')
+
+        package() {
+          install -Dm755 "\$srcdir/hypr" "\$pkgdir/usr/bin/hypr"
+        }
+        EOF
+
+        sed -i 's/^        //' aur-build/PKGBUILD
+        chown -R builder:builder aur-build
+        sudo -u builder bash -lc 'cd aur-build && makepkg --printsrcinfo > .SRCINFO'
+
+    - name: Smoke test AUR package locally
+      shell: bash
+      run: |
+        set -euo pipefail
+        sudo -u builder bash -lc 'cd aur-build && makepkg --syncdeps --noconfirm'
+        pacman -U --noconfirm aur-build/hypr-bin-*.pkg.tar.zst
+        hypr --help
+
+    - name: Publish AUR package
+      if: steps.aur-secret.outputs.available == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        install -m 700 -d ~/.ssh
+        printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur
+        chmod 600 ~/.ssh/aur
+        ssh-keyscan aur.archlinux.org >> ~/.ssh/known_hosts
+        cat > ~/.ssh/config <<EOF
+        Host aur.archlinux.org
+          IdentityFile ~/.ssh/aur
+          User aur
+          IdentitiesOnly yes
+        EOF
+        sed -i 's/^        //' ~/.ssh/config
+
+        git clone ssh://aur@aur.archlinux.org/hypr-bin.git aur-package
+        cd aur-package
+        if git rev-parse --verify HEAD >/dev/null 2>&1; then
+          git switch master || git switch -c master
+        else
+          git switch --orphan master
+        fi
+
+        cp ../aur-build/PKGBUILD ../aur-build/.SRCINFO .
+        git config user.name "Stephan van Stekelenburg"
+        git config user.email "stephan@hayman.io"
+        git add PKGBUILD .SRCINFO
+        if git diff --cached --quiet; then
+          echo "AUR package is already current."
+        else
+          git commit -m "upgpkg: hypr-bin ${{ needs.prepare.outputs.version }}-1"
+          git push origin master
+        fi
+
+    - name: Smoke test published AUR package
+      if: steps.aur-secret.outputs.available == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
+
+        for attempt in {1..10}; do
+          result_count="$(curl -fsSL 'https://aur.archlinux.org/rpc/v5/info/hypr-bin' | jq -r '.resultcount')"
+          if [ "$result_count" != "0" ]; then
+            break
+          fi
+          sleep 15
+        done
+
+        curl -fsSL 'https://aur.archlinux.org/rpc/v5/info/hypr-bin' | jq -e '.resultcount == 1'
+        git clone https://aur.archlinux.org/hypr-bin.git aur-smoke
+        chown -R builder:builder aur-smoke
+        sudo -u builder bash -lc 'cd aur-smoke && makepkg --syncdeps --noconfirm'
+        pacman -U --noconfirm aur-smoke/hypr-bin-*.pkg.tar.zst
+        hypr --help
