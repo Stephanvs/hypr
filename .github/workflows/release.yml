@@ -147,17 +147,11 @@ jobs:
 
   publish-winget:
     needs: [prepare, create-release]
-    runs-on: windows-latest
-
-    steps:
-    - name: Publish WinGet manifest
-      uses: vedantmgoyal9/winget-releaser@main
-      with:
-        identifier: Stephanvs.hypr
-        version: ${{ needs.prepare.outputs.version }}
-        release-tag: v${{ needs.prepare.outputs.version }}
-        installers-regex: '^hypr-windows-x64\.zip$'
-        token: ${{ secrets.WINGET_TOKEN }}
+    uses: ./.github/workflows/publish-winget.yml
+    with:
+      version: ${{ needs.prepare.outputs.version }}
+    secrets:
+      WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
 
   publish-nuget:
     needs: [prepare, build-dotnet-tool]

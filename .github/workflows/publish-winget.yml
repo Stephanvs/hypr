@@ -1,0 +1,39 @@
+name: Publish to WinGet
+run-name: Publish WinGet ${{ inputs.version }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Published release version without the v prefix
+        required: true
+        type: string
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+    secrets:
+      WINGET_TOKEN:
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: winget-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: windows-latest
+
+    steps:
+    - name: Publish WinGet manifest
+      uses: vedantmgoyal9/winget-releaser@main
+      with:
+        identifier: Stephanvs.hypr
+        version: ${{ inputs.version }}
+        release-tag: v${{ inputs.version }}
+        installers-regex: '^hypr-windows-x64\.zip$'
+        token: ${{ secrets.WINGET_TOKEN }}
