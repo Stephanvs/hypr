@@ -23,6 +23,7 @@ internal static class Module
     .AddSingleton<StateService>()
     .AddSingleton<GitService>()
     .AddSingleton<GitHubService>()
+    .AddSingleton<PullRequestWorktreeService>()
     .AddSingleton<TerminalService>()
     .AddSingleton<VersionCheckService>()
     .AddSingleton<HookRunner>()
@@ -33,6 +34,7 @@ internal static class Module
   internal static IServiceCollection AddCommands(this IServiceCollection services) => services
     .AddSingleton<Command, ListCommand>()
     .AddSingleton<Command, SwitchCommand>()
+    .AddSingleton<Command, PrCommand>()
     .AddSingleton<Command, ConfigCommand>()
     .AddSingleton<Command, CleanupCommand>();
 

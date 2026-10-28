@@ -43,6 +43,17 @@ Create a new worktree for a feature branch and open it instantly in a new tab:
 hypr my-feature
 ```
 
+### Review a pull request
+
+Open a GitHub PR in a dedicated worktree, including PRs from forks:
+
+```bash
+hypr pr 123
+hypr pr https://github.com/owner/repository/pull/123
+```
+
+Requires an authenticated GitHub CLI (`gh`). Reopening a PR preserves your local work.
+
 ### Cleanup
 Clean up old worktrees. `hypr` checks if branches are merged or if their PRs are closed.
 
