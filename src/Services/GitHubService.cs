@@ -272,12 +272,11 @@ public class GitHubService(ILogger<GitHubService> logger)
     /// <returns>A tuple containing exitCode, stdout and stderr.</returns>
     public static async Task<(int exitCode, string stdout, string stderr)> RunProcessAsync(string command, string[] args, string repoRoot, TimeSpan? timeout = null)
     {
-        var process = new Process
+        using var process = new Process
         {
             StartInfo = new ProcessStartInfo
             {
                 FileName = command,
-                Arguments = string.Join(" ", args.Select(arg => $"\"{arg}\"")),
                 WorkingDirectory = repoRoot,
                 RedirectStandardOutput = true,
                 RedirectStandardError = true,
@@ -286,6 +285,7 @@ public class GitHubService(ILogger<GitHubService> logger)
             }
         };
 
+        foreach (var arg in args) process.StartInfo.ArgumentList.Add(arg);
         process.Start();
 
         var stdoutTask = process.StandardOutput.ReadToEndAsync();

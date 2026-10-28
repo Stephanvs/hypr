@@ -47,6 +47,33 @@ Branch names are sanitized for the filesystem - slashes become hyphens. For exam
 
 You can customize this with the `directory_pattern` setting (see [Configuration](configuration.md)), which supports template variables like `{repo_name}`, `{branch}`, `{repo_parent_dir}`, and environment variables. For example, to organize all worktrees in a central location: `~/.worktrees/{repo_name}/{branch}`.
 
+## `hypr pr <number-or-url>`
+
+Open a GitHub pull request in its own worktree. Requires the GitHub CLI (`gh`),
+authenticated with access to the repository, and Git access to the configured remote.
+
+```bash
+hypr pr 123
+hypr pr https://github.com/owner/repository/pull/123
+hypr pr 123 --terminal vscode --after-init "npm test" -y
+```
+
+The PR's base repository must match a configured remote. Forked PRs are fetched
+through the base repository's PR ref, so no fork remote is needed. A dedicated
+local branch named `pr-123` keeps review work separate from the contributor's branch.
+An unrelated existing branch with that name is rejected.
+
+Running the command again opens the existing worktree and preserves local commits
+and uncommitted changes. It does not update the branch to the latest PR revision.
+The existing create hooks and session initialization settings apply.
+
+| Option | Description |
+| --- | --- |
+| `--dir <path>` | Override the directory pattern when creating a worktree. |
+| `--terminal <mode>` | Override the terminal mode. |
+| `--after-init <script>` | Run a command after session initialization. |
+| `-y`, `--yes` | Skip the worktree creation confirmation. |
+
 ## `hypr ls`
 
 _(Aliases: `list`, `ll`)_

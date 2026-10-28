@@ -139,7 +139,7 @@ public class SwitchCommand : Command
             AnsiConsole.MarkupLine($"[yellow]Creating new worktree for branch:[/] {branch}");
 
             // Generate worktree path
-            var worktreePath = GenerateWorktreePath(repoPath, branch, dir, worktreeConfig);
+            var worktreePath = worktreeConfig.GetPath(repoPath, branch, dir);
 
             // Run pre-create hook
             if (!string.IsNullOrEmpty(scriptsConfig.PreCreate))
@@ -206,26 +206,4 @@ public class SwitchCommand : Command
         }
     }
 
-    private static string GenerateWorktreePath(string repoPath, string branch, DirectoryInfo? customDir, WorktreeConfig config)
-    {
-        if (customDir is not null)
-            return customDir.FullName;
-
-        // Use directory pattern from config
-        var pattern = config.DirectoryPattern;
-        var repoName = Path.GetFileName(repoPath);
-
-        // Replace placeholders
-        var path = pattern
-            .Replace("{repo_name}", repoName)
-            .Replace("{branch}", branch);
-
-        // Make it absolute relative to repo
-        if (!Path.IsPathRooted(path))
-        {
-            path = Path.Combine(repoPath, path);
-        }
-
-        return Path.GetFullPath(path);
-    }
 }
